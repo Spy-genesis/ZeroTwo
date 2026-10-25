@@ -9,3 +9,5 @@ build/
 .cxx
 .kotlin/
 /app/google-services.json
+/keystore.properties
+/dist/
