@@ -48,6 +48,7 @@ class BlockedActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lastShownAtMillis.value = System.currentTimeMillis()
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -128,6 +129,9 @@ class BlockedActivity : ComponentActivity() {
     }
 
     companion object {
+        /** When the block screen last appeared; the tutorial uses it to confirm "you hit the block screen". */
+        val lastShownAtMillis = kotlinx.coroutines.flow.MutableStateFlow(0L)
+
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_MESSAGE = "message"
         private const val DEFAULT_MESSAGE = "ZeroTwo is keeping social apps closed so you can focus. You've got this."

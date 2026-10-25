@@ -102,6 +102,12 @@ UI only; no logic or behavior changes.
 - **States:** no permission, no calendars on the phone, nothing checked, no matching events: each has its own message; provider errors and revoked permission fall back to the timetable.
 - **Tests:** `CalendarRulesTest` (11): start-inclusive/end-exclusive, events crossing midnight (active on both sides, listed on both days), back-to-back hand-over at the boundary, overlaps, selected calendars only, keyword, all-day off/on, UTC→local all-day, next event today, "calendar active" rules. 16/16 tests pass.
 
+### Tutorial (v1.1.0)
+- `ui/tutorial/`: 6-step walkthrough shown once after sign-in (and at launch for already-signed-in users who haven't seen it), replayable from Home → **How ZeroTwo works**. Skippable at any step; Back goes to the previous step.
+  1. Welcome. 2. **Demo first:** "Start demo class", then press Home and open a blocked app; the step ticks "You hit the block screen" when the block screen has appeared since the demo started (`BlockedActivity.lastShownAtMillis`). Leaving the step ends the demo. 3. **Connect calendar:** Android's permission dialog, then "Choose your class calendar" (opens Calendar settings, Back returns to the tutorial); "Skip for now" keeps the timetable. 4. Controls. 5. Screen time + leaderboard. 6. Done.
+- Seen-flag in SharedPreferences (`TutorialProgress`).
+- `docs/ZeroTwo-Guide.pdf`: user guide (how to use + advantages).
+
 ## Next
 All planned phases done. Before demo day: run the full DEMO.md flow on the real phone once, with and without Wi-Fi.
 

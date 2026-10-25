@@ -14,6 +14,8 @@ import com.zerotwo.focus.ui.home.HomeScreen
 import com.zerotwo.focus.ui.leaderboard.LeaderboardScreen
 import com.zerotwo.focus.ui.onboarding.OnboardingScreen
 import com.zerotwo.focus.ui.screentime.ScreenTimeScreen
+import com.zerotwo.focus.ui.tutorial.TutorialProgress
+import com.zerotwo.focus.ui.tutorial.TutorialScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
@@ -23,6 +25,7 @@ object Routes {
     const val SCREEN_TIME = "screen_time"
     const val LEADERBOARD = "leaderboard"
     const val CALENDAR = "calendar"
+    const val TUTORIAL = "tutorial"
 }
 
 /** Replaces the whole back stack, so Back can't return to onboarding or sign-in. */
@@ -32,19 +35,30 @@ private fun NavHostController.navigateClearingStack(route: String) =
 @Composable
 fun AppNavHost(startDestination: String) {
     val navController = rememberNavController()
-    val profiles = StudentProfileStore.get(LocalContext.current)
+    val context = LocalContext.current
+    val profiles = StudentProfileStore.get(context)
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
                 onContinue = {
                     navController.navigateClearingStack(
-                        if (profiles.profile.value == null) Routes.ERP_LOGIN else Routes.HOME,
+                        when {
+                            profiles.profile.value == null -> Routes.ERP_LOGIN
+                            !TutorialProgress.isSeen(context) -> Routes.TUTORIAL
+                            else -> Routes.HOME
+                        },
                     )
                 },
             )
         }
         composable(Routes.ERP_LOGIN) {
-            ErpLoginScreen(onSignedIn = { navController.navigateClearingStack(Routes.HOME) })
+            ErpLoginScreen(
+                onSignedIn = {
+                    navController.navigateClearingStack(
+                        if (TutorialProgress.isSeen(context)) Routes.HOME else Routes.TUTORIAL,
+                    )
+                },
+            )
         }
         composable(Routes.HOME) {
             HomeScreen(
@@ -52,6 +66,7 @@ fun AppNavHost(startDestination: String) {
                 onOpenScreenTime = { navController.navigate(Routes.SCREEN_TIME) },
                 onOpenLeaderboard = { navController.navigate(Routes.LEADERBOARD) },
                 onOpenCalendar = { navController.navigate(Routes.CALENDAR) },
+                onOpenTutorial = { navController.navigate(Routes.TUTORIAL) },
                 onReviewPermissions = { navController.navigate(Routes.ONBOARDING) },
                 onSignedOut = { navController.navigateClearingStack(Routes.ERP_LOGIN) },
             )
@@ -64,6 +79,12 @@ fun AppNavHost(startDestination: String) {
         }
         composable(Routes.LEADERBOARD) {
             LeaderboardScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.TUTORIAL) {
+            TutorialScreen(
+                onFinished = { navController.navigateClearingStack(Routes.HOME) },
+                onOpenCalendar = { navController.navigate(Routes.CALENDAR) },
+            )
         }
         composable(Routes.CALENDAR) {
             CalendarSettingsScreen(onBack = { navController.popBackStack() })

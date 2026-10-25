@@ -5,7 +5,8 @@ One phone, works offline. Demo mode fakes "a class is in session right now" and 
 ## Before you go on stage (5 min)
 - [ ] Latest build installed (`adb install -r app/build/outputs/apk/debug/app-debug.apk`).
 - [ ] Onboarding done: all 3 required cards **Granted** (battery one too, ideally).
-- [ ] Signed in, e.g. ERP `24150` · Computer Science · 2024.
+- [ ] Signed in, e.g. ERP `24150` · Computer Science · 2024, and the tutorial finished or skipped.
+- [ ] Optional: calendar connected (Home → Calendar settings), so the schedule shows "FROM CALENDAR".
 - [ ] Instagram (or YouTube) installed and **on the home screen dock**, so you can open it in one tap.
 - [ ] Phone used a bit today, so screen time isn't 0m.
 - [ ] Blocking **off** on Home and demo mode **off** (no "Demo" chip next to the title).
@@ -17,7 +18,7 @@ One phone, works offline. Demo mode fakes "a class is in session right now" and 
 | Time | Do | Say |
 |---|---|---|
 | 0:00–0:08 | Show Home. | "Students spend hours a day on social apps, a lot of it during lectures. ZeroTwo is a screen-time blocker that knows your class timetable." |
-| 0:08–0:18 | Point at **Today's schedule**. Tap the **ZeroTwo** title 5× fast; the status card turns indigo: *Blocking · in Operating Systems (Demo)*. | "The timetable comes from the college ERP. When a class starts, blocking switches on by itself. Let's pretend a lecture just started." |
+| 0:08–0:18 | Point at **Today's schedule**. Tap the **ZeroTwo** title 5× fast; the status card turns indigo: *Blocking · in Operating Systems (Demo)*. | "It reads your lectures from your calendar, or the college timetable. When a class starts, blocking switches on by itself. Let's pretend a lecture just started." |
 | 0:18–0:30 | Press Home, tap **Instagram**. The block screen appears: *You're in Operating Systems (Demo)*. Tap **Go Home**. | "Instagram is blocked until class ends. No willpower needed, and no off switch mid-lecture: the blocked-apps list is locked during class." |
 | 0:30–0:42 | Back in ZeroTwo, tap **Screen time today**. Tap a couple of bars. | "Outside class you decide. It tracks per-app screen time for the week, and social apps are tagged." |
 | 0:42–0:55 | Back, tap **Leaderboard**. | "And it's social in a good way: you're ranked against your own batch and department, lowest screen time wins. Classmates' IDs are masked." |
@@ -32,5 +33,7 @@ One phone, works offline. Demo mode fakes "a class is in session right now" and 
 ## Talking points for questions
 - **How does it detect apps?** An accessibility service (package name only, never screen content), with a UsageStats check every second as backup.
 - **Why won't Android kill it?** A foreground service with a persistent notification, the battery optimization exemption, and a restart after reboot.
+- **Calendar?** Optional, read-only: it reads event times and titles from the calendars you tick, optionally filtered by a keyword like "lecture". Without it, the built-in timetable is used.
+- **How do new users learn it?** A one-minute tutorial on first launch: demo first, then connect your calendar.
 - **ERP?** Integration-ready, mocked for the demo: 5-digit ERP + department/batch picker, and the timetable is a JSON file the ERP would supply.
 - **Backend?** None of our own: Firebase anonymous auth + Firestore, one document per student per day.

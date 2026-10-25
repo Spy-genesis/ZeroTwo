@@ -71,6 +71,7 @@ fun HomeScreen(
     onOpenScreenTime: () -> Unit,
     onOpenLeaderboard: () -> Unit,
     onOpenCalendar: () -> Unit,
+    onOpenTutorial: () -> Unit,
     onReviewPermissions: () -> Unit,
     onSignedOut: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
@@ -243,6 +244,9 @@ fun HomeScreen(
                     }
                     OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenCalendar, modifier = Modifier.fillMaxWidth()) {
                         Text("Calendar settings")
+                    }
+                    OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenTutorial, modifier = Modifier.fillMaxWidth()) {
+                        Text("How ZeroTwo works")
                     }
                     OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {
                         Text("Review permissions")

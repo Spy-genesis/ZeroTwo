@@ -19,12 +19,14 @@ Get the latest APK from [**Releases**](../../releases/latest) (Android 8.0+).
 
 ## Features
 
-- **Auto-block during class.** A timetable drives blocking: if a class is in session, Instagram, TikTok, Facebook, Snapchat, YouTube and X are blocked, and the switch can't be turned off mid-lecture.
+- **Auto-block during class.** Your **calendar** (any calendar on the phone, e.g. Google Calendar) or the built-in timetable drives blocking: if a class is in session, Instagram, TikTok, Facebook, Snapchat, YouTube and X are blocked, and the switch can't be turned off mid-lecture.
 - **Manual mode outside class.** One switch blocks the same apps during study time.
 - **Full-screen block page.** "You're in *Operating Systems*", until when, and a Go Home button.
 - **Screen time.** Per-app and total daily usage with a 7-day bar chart; social apps are tagged.
 - **Leaderboard.** Students in the same department and batch, ranked lowest screen time first, with classmates' ERPs masked.
 - **College ERP sign-in.** 5-digit ERP, department and batch. *Integration-ready, mocked for demo.*
+- **Calendar settings.** Pick which calendars count as class time, optionally only events whose title contains a keyword like "lecture"; all-day events are ignored unless you turn them on. Edits to your calendar apply within seconds.
+- **Guided tutorial.** A one-minute walkthrough on first launch: try a demo class first, then connect your calendar. Replay it from Home → How ZeroTwo works. Full guide: [`docs/ZeroTwo-Guide.pdf`](docs/ZeroTwo-Guide.pdf).
 - **Hidden demo mode.** Tap the **ZEROTWO** title 5 times: a fake class starts now and the leaderboard adds sample classmates, so the whole story works on one phone, even offline. See [`DEMO.md`](DEMO.md) for the 60-second script.
 
 ## How it works
@@ -33,7 +35,8 @@ Get the latest APK from [**Releases**](../../releases/latest) (Android 8.0+).
 |---|---|
 | Detecting the open app | An **AccessibilityService** (reads the package name only, never screen content), with a **UsageStatsManager** check every second as a backup |
 | Staying alive | A **foreground service** with a persistent notification, an optional battery-optimization exemption, and a restart after reboot or update |
-| Deciding to block | One rule in `BlockPolicy`: class in session (or demo) → block; else manual switch on → block; else off |
+| Deciding to block | One rule in `BlockPolicy`: demo → block; else a matching **calendar event** now (or, without calendar access, a **timetable** class) → block; else manual switch on → block; else off |
+| Calendar | `CalendarContract.Instances` (recurring events expanded), cached and refreshed every 60 s and on calendar changes (`ContentObserver`) |
 | Screen time | Built from raw UsageStats events, split at local midnight; launcher and System UI excluded |
 | Leaderboard | Firebase **Anonymous Auth** + **Firestore**, one document per student per day (`dailyScreenTime/{erp}_{date}`); no custom backend |
 
@@ -92,6 +95,7 @@ Without Firebase the app still builds and runs; the leaderboard then works in de
 | Usage access | Screen time, and the backup app detector |
 | Display over other apps | Showing the block screen on top of a blocked app |
 | Accessibility service | Instant detection of which app was opened |
+| Calendar (optional) | Blocking during events in the calendars you pick (read-only) |
 | Ignore battery optimization (optional) | Keeps the blocker from being killed |
 | Notifications | The persistent "blocking" notification (blocking works without it) |
 

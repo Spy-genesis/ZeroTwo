@@ -10,6 +10,7 @@ import com.zerotwo.focus.permissions.PermissionChecker
 import com.zerotwo.focus.ui.navigation.AppNavHost
 import com.zerotwo.focus.ui.navigation.Routes
 import com.zerotwo.focus.ui.theme.ZeroTwoTheme
+import com.zerotwo.focus.ui.tutorial.TutorialProgress
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
         val start = when {
             !PermissionChecker.allRequiredGranted(this) -> Routes.ONBOARDING
             StudentProfileStore.get(this).profile.value == null -> Routes.ERP_LOGIN
+            !TutorialProgress.isSeen(this) -> Routes.TUTORIAL
             else -> Routes.HOME
         }
         setContent {
