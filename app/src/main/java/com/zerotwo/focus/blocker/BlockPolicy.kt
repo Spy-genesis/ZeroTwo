@@ -1,7 +1,7 @@
 package com.zerotwo.focus.blocker
 
 import android.content.Context
-import com.zerotwo.focus.config.TimetableConfig
+import com.zerotwo.focus.config.DemoConfig
 import com.zerotwo.focus.timetable.ClassSession
 import com.zerotwo.focus.timetable.TimetableRepository
 import kotlinx.coroutines.delay
@@ -43,8 +43,8 @@ object BlockPolicy {
             val session = ClassSession(
                 day = start.dayOfWeek,
                 start = start.toLocalTime(),
-                end = start.toLocalTime().plusMinutes(TimetableConfig.DEMO_DURATION_MINUTES),
-                course = TimetableConfig.DEMO_COURSE_NAME,
+                end = start.toLocalTime().plusMinutes(DemoConfig.DEMO_DURATION_MINUTES),
+                course = DemoConfig.DEMO_COURSE_NAME,
             )
             return BlockStatus.InClass(session, isDemo = true)
         }

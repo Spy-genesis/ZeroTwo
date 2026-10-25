@@ -6,7 +6,7 @@
 3. **Mock timetable + class-hours blocking** ✅
 4. **Screen time stats + 7-day chart** ✅
 5. **Mock ERP login + Firebase leaderboard** ✅
-6. Polish + demo prep
+6. **Polish + demo prep** ✅
 
 ## Done
 ### Phase 1 — Scaffold + onboarding
@@ -61,23 +61,32 @@
 4. Build → Firestore Database → Create database (any region, production mode) → Rules tab → paste `firestore.rules` → Publish.
 5. Rebuild + reinstall.
 
+### Phase 6 — Polish + demo
+- **Demo mode end to end:** moved to `config/DemoConfig.kt`. 5 taps on the Home title → fake class (block screen says "You're in Operating Systems (Demo)") **and** the leaderboard adds 6 sample classmates (marked "sample", shown only on this phone, never uploaded; "Today" values scale with time of day). If Firebase is missing or unreachable, demo mode falls back to an **offline leaderboard** (your on-device time + sample classmates) instead of an error.
+- **Home:** new "Screen time today" tile (tap → Screen time screen) replaces the plain button; demo toast explains what turned on.
+- **Leaderboard states:** loading spinner, not-configured, error + Try again, empty-day message, upload-failed notice above the list, demo banner.
+- **Onboarding:** on Xiaomi/Redmi/POCO/Oppo/realme/vivo/OnePlus/Huawei/Honor, an "Extra step" card explains the OEM Autostart / background pop-up switches with an App info button.
+- **Fixed known issues:**
+  - Reboot / app update: `blocker/BootReceiver.kt` (BOOT_COMPLETED + MY_PACKAGE_REPLACED) restarts `BlockerService` when onboarding is done.
+  - Late demo class crossing midnight: `ClassSession.isInSession`/`isOver` handle wrap-around; schedule row shows "Now" correctly.
+  - Screen time missed a session already open at the window's first midnight: events are now read from 24 h earlier and clipped.
+  - Launcher icon has a monochrome layer (Android 13 themed icons).
+- **Tests:** first JVM unit tests (`./gradlew testDebugUnitTest`): `ClassSessionTest` (incl. midnight wrap) and `FormatDurationTest`. 3/3 pass.
+- **DEMO.md:** pre-stage checklist, 60-second script, recovery steps, Q&A talking points.
+
 ## Next
-Phase 6: polish + demo prep (e.g. boot receiver, demo classmates for a one-phone demo, app icon monochrome layer, final pass on copy).
+All planned phases done. Before demo day: run the full DEMO.md flow on the real phone once, with and without Wi-Fi.
 
 ## Known issues
-- Android 13+ sideloaded APK (installed from file manager/browser): accessibility switch is greyed out ("restricted setting"). Fix: App info → ⋮ → Allow restricted settings. Installing with `adb install` avoids it.
-- Block screen is an Activity launched from the background. Allowed because we hold the overlay permission / are an accessibility service; on some aggressive OEM ROMs (MIUI/HyperOS) you may also need to allow "Display pop-up windows while running in background" in App info → Other permissions.
-- With accessibility off, the UsageStats fallback can take up to ~1 s to react.
-- Blocking does not survive a reboot until the app is opened once (no BOOT_COMPLETED receiver yet). The accessibility service restarts on boot by itself and still blocks during class, because the policy is checked directly — only the notification and the UsageStats fallback are missing.
-- The notification is now always shown (even when not blocking), since the service has to watch for class start.
-- Classes that cross midnight aren't supported (end must be after start; such entries are skipped). A demo started after 23:00 still blocks for its full 60 min, but its schedule row won't be marked "Now" after midnight.
-- Screen time: a session already running at 00:00 six days ago is missed (no start event in the window). Numbers may differ by a few minutes from Digital Wellbeing, which uses its own rules.
-- The chart wasn't rendered before commit (no device attached); check it on the phone.
-- Timetable uses device local time; changing the phone clock is a way around blocking (acceptable for the demo).
-- ERP is mocked: student IDs are self-declared, so anyone can post under any ID (rules can't prevent it without real auth). Fine for the demo.
-- Leaderboard with one phone only shows you. To see ranking, sign out and sign in with a second ID (same dept/batch): both IDs will appear (the second one uploads this phone's numbers too, so they'll match until the next day).
-- Firestore query returns the whole batch for a day; fine for class-sized groups, would need paging/limits for thousands.
-- If the anonymous user changes (reinstall / clear data), the new install can still overwrite the same student's docs (rules don't lock a student ID to a uid).
+- **Not verified on a device/emulator by Claude.** The Android emulator (37.x, API 35 image) segfaults on this host (kernel 7.2) even outside the sandbox, so all on-device checks are on you. It (≈4.4 GB in `~/Android/Sdk/emulator` + `system-images`) can be deleted.
+- Android 13+ sideloaded APK (installed from file manager/browser): accessibility switch is greyed out ("restricted setting"). Fix: App info → ⋮ → Allow restricted settings (explained on the onboarding card). Installing with `adb install` avoids it.
+- OEM ROMs (MIUI/HyperOS etc.) may block the background-launched block screen until "Autostart" / "Display pop-up windows while running in background" is allowed. The app can't detect these switches; the onboarding card explains them.
+- The status notification is always shown, by design: the service has to be alive to notice a class starting.
+- Timetable classes can't cross midnight (such JSON entries are skipped). Only the demo class can.
+- Timetable uses device local time; changing the phone clock gets around blocking.
+- Screen time may differ by a few minutes from Digital Wellbeing (different session rules).
+- ERP is mocked: student IDs are self-declared, so anyone can post under any ID, and a reinstall can overwrite the same student's docs. Real ERP auth fixes both.
+- Leaderboard fetches the whole batch for a day (no paging); fine at class size.
 - Lint: only "newer dependency version available" warnings; versions are pinned on purpose.
 - Usage access deep link with package URI only lands on our app on some ROMs; others show the full list.
 
@@ -86,5 +95,6 @@ Toolchain lives in `~/Android` (JDK 17, SDK 35, Gradle 8.9). Not on PATH. `~/.gr
 ```
 export JAVA_HOME=~/Android/jdk ANDROID_HOME=~/Android/Sdk
 ./gradlew assembleDebug        # APK: app/build/outputs/apk/debug/app-debug.apk
+./gradlew testDebugUnitTest    # JVM unit tests
 ~/Android/Sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```

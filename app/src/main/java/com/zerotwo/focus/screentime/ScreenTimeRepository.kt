@@ -45,8 +45,10 @@ class ScreenTimeRepository(private val context: Context) {
         val firstDay = today.minusDays(days - 1L)
         val windowStart = firstDay.atStartOfDay(zone).toInstant().toEpochMilli()
 
+        // Start reading a day early so an app already open at the window's first midnight is counted;
+        // add() clips everything before windowStart.
         val events = try {
-            usageStats.queryEvents(windowStart, nowMillis)
+            usageStats.queryEvents(windowStart - LOOKBEHIND_MS, nowMillis)
         } catch (e: SecurityException) {
             return null
         } ?: return null
@@ -127,6 +129,7 @@ class ScreenTimeRepository(private val context: Context) {
         const val EVENT_SCREEN_NON_INTERACTIVE = 16
         const val EVENT_DEVICE_SHUTDOWN = 26
         const val MIN_APP_MILLIS = 60_000L
+        const val LOOKBEHIND_MS = 24 * 60 * 60_000L
     }
 }
 

@@ -119,6 +119,11 @@ fun OnboardingScreen(
                     },
                 )
             }
+            oemBrand()?.let { brand ->
+                item {
+                    OemHintCard(brand) { if (!SettingsLauncher.openAppDetails(context)) showCouldNotOpen() }
+                }
+            }
         }
     }
 }
@@ -187,5 +192,33 @@ private fun StatusBadge(granted: Boolean) {
             style = MaterialTheme.typography.labelLarge,
             color = color,
         )
+    }
+}
+
+/**
+ * Some OEM skins add their own switches that Android's APIs can't read, so this is advice, not a check.
+ * Returns a display name for those brands, or null.
+ */
+private fun oemBrand(): String? {
+    val maker = android.os.Build.MANUFACTURER.lowercase()
+    return listOf("xiaomi", "redmi", "poco", "oppo", "realme", "vivo", "oneplus", "huawei", "honor")
+        .firstOrNull { maker.contains(it) }
+        ?.replaceFirstChar { it.uppercase() }
+}
+
+@Composable
+private fun OemHintCard(brand: String, onOpenAppInfo: () -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Extra step on $brand phones", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "In App info, allow \"Autostart\" and, if listed, \"Display pop-up windows while running in " +
+                    "background\". Without them the block screen may not appear. ZeroTwo can't check these for you.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            OutlinedButton(onClick = onOpenAppInfo, modifier = Modifier.padding(top = 12.dp)) { Text("Open app info") }
+        }
     }
 }

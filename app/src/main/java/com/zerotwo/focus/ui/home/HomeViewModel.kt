@@ -12,14 +12,18 @@ import com.zerotwo.focus.cloud.ScreenTimeSync
 import com.zerotwo.focus.erp.StudentProfile
 import com.zerotwo.focus.erp.StudentProfileStore
 import com.zerotwo.focus.permissions.PermissionChecker
+import com.zerotwo.focus.screentime.ScreenTimeRepository
 import com.zerotwo.focus.timetable.ClassSession
 import com.zerotwo.focus.timetable.TimetableRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -40,6 +44,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     val profile: StateFlow<StudentProfile?> = profiles.profile
 
+    /** Today's total, or null while loading / without usage access. */
+    private val _todayMillis = MutableStateFlow<Long?>(null)
+    val todayMillis: StateFlow<Long?> = _todayMillis.asStateFlow()
+
     val uiState: StateFlow<HomeUiState> =
         combine(BlockPolicy.statusFlow(application), settings.state, permissionsOk) { status, blocker, permsOk ->
             buildState(status, blocker, permsOk)
@@ -58,6 +66,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     /** Called on resume: permissions can be revoked from Settings at any time. */
     fun refresh() {
         permissionsOk.value = PermissionChecker.allRequiredGranted(getApplication())
+        viewModelScope.launch {
+            _todayMillis.value = withContext(Dispatchers.IO) {
+                runCatching { ScreenTimeRepository(getApplication()).lastDays(days = 1)?.last()?.totalMillis }.getOrNull()
+            }
+        }
     }
 
     fun ensureServiceRunning() = BlockerService.start(getApplication())

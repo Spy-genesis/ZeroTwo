@@ -111,13 +111,20 @@ private fun Ranking(content: LeaderboardContent.Loaded, myId: String?) {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        content.uploadWarning?.let { warning ->
+        if (content.isDemo) {
             item {
-                Text(
-                    "Your latest numbers weren't uploaded: $warning",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Text(
+                        "Demo mode: classmates marked \"sample\" are made-up data shown only on this phone.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
+            }
+        }
+        content.notice?.let { notice ->
+            item {
+                Text(notice, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             }
         }
         item {
@@ -130,7 +137,7 @@ private fun Ranking(content: LeaderboardContent.Loaded, myId: String?) {
         if (content.entries.isEmpty()) {
             item {
                 Text(
-                    "No one in your batch has synced yet.",
+                    "No one in your batch has synced for this day yet.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -165,7 +172,7 @@ private fun LeaderboardRow(entry: LeaderboardEntry, rank: Int, isMe: Boolean) {
                     fontWeight = if (isMe) FontWeight.SemiBold else FontWeight.Normal,
                 )
                 Text(
-                    "Social ${formatDuration(entry.socialMillis)}",
+                    "Social ${formatDuration(entry.socialMillis)}" + if (entry.isDemo) " · sample" else "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

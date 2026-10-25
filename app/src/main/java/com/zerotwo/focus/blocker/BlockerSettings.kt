@@ -3,7 +3,7 @@ package com.zerotwo.focus.blocker
 import android.content.Context
 import com.zerotwo.focus.config.BlockableApp
 import com.zerotwo.focus.config.BlockedAppsConfig
-import com.zerotwo.focus.config.TimetableConfig
+import com.zerotwo.focus.config.DemoConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +22,7 @@ data class BlockerState(
         get() = BlockedAppsConfig.DEFAULT_BLOCKED_APPS.filter(::isAppSelected)
 
     fun isDemoActive(nowMillis: Long): Boolean =
-        demoStartedAtMillis > 0 && nowMillis < demoStartedAtMillis + TimetableConfig.DEMO_DURATION_MINUTES * 60_000
+        demoStartedAtMillis > 0 && nowMillis < demoStartedAtMillis + DemoConfig.DEMO_DURATION_MINUTES * 60_000
 }
 
 /**

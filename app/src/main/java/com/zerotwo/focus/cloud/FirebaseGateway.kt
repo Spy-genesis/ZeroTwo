@@ -14,6 +14,8 @@ data class LeaderboardEntry(
     val studentId: String,
     val totalMillis: Long,
     val socialMillis: Long,
+    /** Sample classmate added by demo mode; never stored anywhere. */
+    val isDemo: Boolean = false,
 )
 
 /**

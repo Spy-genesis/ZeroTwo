@@ -49,7 +49,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.blocker.BlockStatus
-import com.zerotwo.focus.config.TimetableConfig
+import com.zerotwo.focus.config.DemoConfig
+import com.zerotwo.focus.screentime.formatDuration
 import com.zerotwo.focus.timetable.ClassSession
 import com.zerotwo.focus.timetable.format
 import java.time.LocalTime
@@ -65,6 +66,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val profile by viewModel.profile.collectAsStateWithLifecycle()
+    val todayMillis by viewModel.todayMillis.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
@@ -89,10 +91,14 @@ fun HomeScreen(
         val now = SystemClock.elapsedRealtime()
         taps = if (now - lastTapAt < 1_000) taps + 1 else 1
         lastTapAt = now
-        if (taps >= TimetableConfig.DEMO_UNLOCK_TAPS) {
+        if (taps >= DemoConfig.DEMO_UNLOCK_TAPS) {
             taps = 0
             val on = viewModel.toggleDemo()
-            Toast.makeText(context, if (on) "Demo class started" else "Demo mode off", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                if (on) "Demo on: class in session + sample classmates" else "Demo mode off",
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
@@ -143,6 +149,26 @@ fun HomeScreen(
             item { StatusCard(state.status, state.blocker.selectedApps.size) }
 
             item {
+                Card(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Screen time today", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Tap for the last 7 days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            todayMillis?.let(::formatDuration) ?: "—",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+
+            item {
                 Card(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -190,9 +216,6 @@ fun HomeScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                     Button(onClick = onOpenLeaderboard, modifier = Modifier.fillMaxWidth()) {
                         Text("Leaderboard")
-                    }
-                    OutlinedButton(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
-                        Text("Screen time")
                     }
                     OutlinedButton(onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
                         Text("Choose blocked apps")
@@ -256,7 +279,7 @@ private fun StatusCard(status: BlockStatus, appCount: Int) {
 private fun ScheduleRow(session: ClassSession, now: LocalTime) {
     val context = LocalContext.current
     val isNow = session.isInSession(now)
-    val isPast = !now.isBefore(session.end)
+    val isPast = session.isOver(now)
     Card(
         modifier = Modifier.fillMaxWidth().alpha(if (isPast) 0.5f else 1f),
         colors = if (isNow) {

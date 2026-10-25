@@ -12,7 +12,14 @@ data class ClassSession(
     val end: LocalTime,
     val course: String,
 ) {
-    fun isInSession(time: LocalTime): Boolean = !time.isBefore(start) && time.isBefore(end)
+    /** Timetable classes never cross midnight, but a late-night demo class can, e.g. 23:30–00:30. */
+    private val crossesMidnight: Boolean get() = !end.isAfter(start)
+
+    fun isInSession(time: LocalTime): Boolean =
+        if (crossesMidnight) !time.isBefore(start) || time.isBefore(end)
+        else !time.isBefore(start) && time.isBefore(end)
+
+    fun isOver(time: LocalTime): Boolean = !crossesMidnight && !time.isBefore(end)
 }
 
 /** Formats a time using the device's 12h/24h preference. */
