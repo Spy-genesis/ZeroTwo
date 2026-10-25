@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Paste into Firebase console > Firestore > Rules.
+// Identity comes from the MOCKED ERP login (integration-ready, mocked for demo), so the student ID
+// is self-declared; the rules only make sure each write is well-formed and tied to an auth user.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /dailyScreenTime/{docId} {
+      allow read: if request.auth != null;
+
+      allow create, update: if request.auth != null
+        && docId == request.resource.data.studentId + '_' + request.resource.data.date
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.department is string
+        && request.resource.data.batch is string
+        && request.resource.data.totalMillis is int
+        && request.resource.data.totalMillis >= 0
+        && request.resource.data.totalMillis <= 86400000
+        && request.resource.data.socialMillis is int
+        && request.resource.data.socialMillis >= 0
+        && request.resource.data.socialMillis <= request.resource.data.totalMillis;
+
+      allow delete: if false;
+    }
+  }
+}

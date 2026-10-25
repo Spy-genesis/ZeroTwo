@@ -8,6 +8,9 @@ import com.zerotwo.focus.blocker.BlockStatus
 import com.zerotwo.focus.blocker.BlockerService
 import com.zerotwo.focus.blocker.BlockerSettings
 import com.zerotwo.focus.blocker.BlockerState
+import com.zerotwo.focus.cloud.ScreenTimeSync
+import com.zerotwo.focus.erp.StudentProfile
+import com.zerotwo.focus.erp.StudentProfileStore
 import com.zerotwo.focus.permissions.PermissionChecker
 import com.zerotwo.focus.timetable.ClassSession
 import com.zerotwo.focus.timetable.TimetableRepository
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -32,6 +36,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val settings = BlockerSettings.get(application)
     private val timetable = TimetableRepository.get(application)
     private val permissionsOk = MutableStateFlow(true)
+    private val profiles = StudentProfileStore.get(application)
+
+    val profile: StateFlow<StudentProfile?> = profiles.profile
 
     val uiState: StateFlow<HomeUiState> =
         combine(BlockPolicy.statusFlow(application), settings.state, permissionsOk) { status, blocker, permsOk ->
@@ -54,6 +61,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun ensureServiceRunning() = BlockerService.start(getApplication())
+
+    /** Throttled; the leaderboard forces a fresh upload when opened. */
+    fun syncScreenTime() {
+        viewModelScope.launch { ScreenTimeSync.sync(getApplication()) }
+    }
+
+    fun signOut() = profiles.clear()
 
     fun setManualBlockingEnabled(enabled: Boolean) = settings.setManualBlockingEnabled(enabled)
 

@@ -16,6 +16,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.zerotwo.focus.MainActivity
 import com.zerotwo.focus.R
+import com.zerotwo.focus.cloud.ScreenTimeSync
 import com.zerotwo.focus.timetable.format
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +56,11 @@ class BlockerService : Service() {
     private suspend fun runLoop() {
         val detector = ForegroundAppDetector(this)
         var shownText: Pair<String, String>? = null
+        var ticks = 0L
         while (scope.isActive) {
+            // ScreenTimeSync throttles itself to one upload per 15 min; checking once a minute is plenty.
+            if (ticks++ % 60 == 0L) scope.launch { ScreenTimeSync.sync(this@BlockerService) }
+
             val status = BlockPolicy.evaluate(this)
             val text = notificationText(status)
             if (text != shownText) {

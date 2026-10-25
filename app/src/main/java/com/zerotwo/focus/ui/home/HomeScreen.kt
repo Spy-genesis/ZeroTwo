@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,10 +58,13 @@ import java.time.LocalTime
 fun HomeScreen(
     onOpenBlockedApps: () -> Unit,
     onOpenScreenTime: () -> Unit,
+    onOpenLeaderboard: () -> Unit,
     onReviewPermissions: () -> Unit,
+    onSignedOut: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val profile by viewModel.profile.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
@@ -75,6 +79,7 @@ fun HomeScreen(
             notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         viewModel.ensureServiceRunning()
+        viewModel.syncScreenTime()
     }
 
     // Hidden demo toggle: tap the title quickly DEMO_UNLOCK_TAPS times.
@@ -183,7 +188,10 @@ fun HomeScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    Button(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = onOpenLeaderboard, modifier = Modifier.fillMaxWidth()) {
+                        Text("Leaderboard")
+                    }
+                    OutlinedButton(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
                         Text("Screen time")
                     }
                     OutlinedButton(onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
@@ -191,6 +199,23 @@ fun HomeScreen(
                     }
                     OutlinedButton(onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {
                         Text("Review permissions")
+                    }
+                }
+            }
+
+            profile?.let { p ->
+                item {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                        Text(
+                            "Signed in as ${p.studentId} · ${p.department} · Batch ${p.batch}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = {
+                            viewModel.signOut()
+                            onSignedOut()
+                        }) { Text("Sign out") }
                     }
                 }
             }

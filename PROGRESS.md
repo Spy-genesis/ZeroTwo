@@ -5,9 +5,8 @@
 2. **Blocking social apps** ✅
 3. **Mock timetable + class-hours blocking** ✅
 4. **Screen time stats + 7-day chart** ✅
-5. Mock ERP link: student ID + department picker (integration-ready, mocked for demo)
-6. Firebase anonymous auth + screen-time upload + batch/department leaderboard
-7. Polish + demo prep
+5. **Mock ERP login + Firebase leaderboard** ✅
+6. Polish + demo prep
 
 ## Done
 ### Phase 1 — Scaffold + onboarding
@@ -46,8 +45,24 @@
 - **Chart:** `ui/screentime/WeeklyBarChart.kt`, plain Compose `Canvas`. Single series in the accent; selected day full strength, others faded; bars ≤ 24 dp with rounded tops; hairline gridlines at clean steps (15m/30m/1h/2h…, ≤ 4 lines); value label only on the selected bar. Tap a column to select that day. TalkBack reads all 7 totals.
 - **Manifest:** `<queries>` for launcher/home intents so other apps' names and icons are visible on Android 11+.
 
+### Phase 5 — Mock ERP login + leaderboard
+- **ERP login (MOCKED, integration-ready):** `erp/MockErpClient.kt` accepts any student ID matching `[A-Z0-9]{4,16}` (uppercased) plus a department + batch picked from `config/ErpMockConfig.kt`. Comments mark where a real ERP call goes. Profile saved locally in `erp/StudentProfile.kt` (`StudentProfileStore`).
+- **Flow:** onboarding → ERP sign-in → Home. App launch skips sign-in when a profile exists. Home footer shows "Signed in as …" + **Sign out** (back to sign-in; screen-time data in Firestore stays).
+- **Firebase:** `cloud/FirebaseGateway.kt` — anonymous auth underneath (just to satisfy rules); Firestore collection `dailyScreenTime`, doc ID `{studentId}_{yyyy-MM-dd}`, fields `studentId, department, batch, date, totalMillis, socialMillis, uid, updatedAt`. One flat collection + equality-only filters → **no composite index needed**; sorting is done on the phone.
+- **Upload:** `cloud/ScreenTimeSync.kt` uploads today + yesterday. Triggered on sign-in, on Home, every 15 min from `BlockerService`, and forced when the leaderboard opens/refreshes. Never throws; 15 s timeout; Firestore's offline cache queues writes.
+- **Leaderboard:** Home → **Leaderboard**. Same department + batch, Today / Yesterday, ranked by **total** screen time, lowest first (ties by ID). Shows "You're #N of M", your row highlighted with full ID, classmates' IDs masked (`21•••45`), social time under each. Refresh button. Clear messages for: Firebase not configured, no connection, rules rejecting, anonymous auth disabled.
+- **Rules:** `firestore.rules` in repo root (signed-in read; writes must match doc ID, own uid, sane millis).
+- **Build:** the Google Services plugin is only applied if `app/google-services.json` exists (gitignored). Verified both ways.
+
+### Firebase setup (one time)
+1. console.firebase.google.com → Add project (Analytics off is fine).
+2. Add Android app, package **`com.zerotwo.focus`** → download `google-services.json` → put it in `app/`.
+3. Build → Authentication → Sign-in method → enable **Anonymous**.
+4. Build → Firestore Database → Create database (any region, production mode) → Rules tab → paste `firestore.rules` → Publish.
+5. Rebuild + reinstall.
+
 ## Next
-Phase 5: mock ERP link — student ID + department/batch picker (integration-ready, mocked for demo), stored locally for the Phase 6 leaderboard.
+Phase 6: polish + demo prep (e.g. boot receiver, demo classmates for a one-phone demo, app icon monochrome layer, final pass on copy).
 
 ## Known issues
 - Android 13+ sideloaded APK (installed from file manager/browser): accessibility switch is greyed out ("restricted setting"). Fix: App info → ⋮ → Allow restricted settings. Installing with `adb install` avoids it.
@@ -59,6 +74,10 @@ Phase 5: mock ERP link — student ID + department/batch picker (integration-rea
 - Screen time: a session already running at 00:00 six days ago is missed (no start event in the window). Numbers may differ by a few minutes from Digital Wellbeing, which uses its own rules.
 - The chart wasn't rendered before commit (no device attached); check it on the phone.
 - Timetable uses device local time; changing the phone clock is a way around blocking (acceptable for the demo).
+- ERP is mocked: student IDs are self-declared, so anyone can post under any ID (rules can't prevent it without real auth). Fine for the demo.
+- Leaderboard with one phone only shows you. To see ranking, sign out and sign in with a second ID (same dept/batch): both IDs will appear (the second one uploads this phone's numbers too, so they'll match until the next day).
+- Firestore query returns the whole batch for a day; fine for class-sized groups, would need paging/limits for thousands.
+- If the anonymous user changes (reinstall / clear data), the new install can still overwrite the same student's docs (rules don't lock a student ID to a uid).
 - Lint: only "newer dependency version available" warnings; versions are pinned on purpose.
 - Usage access deep link with package URI only lands on our app on some ROMs; others show the full list.
 
