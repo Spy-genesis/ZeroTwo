@@ -7,11 +7,13 @@ import androidx.navigation.compose.rememberNavController
 import com.zerotwo.focus.ui.blockedapps.BlockedAppsScreen
 import com.zerotwo.focus.ui.home.HomeScreen
 import com.zerotwo.focus.ui.onboarding.OnboardingScreen
+import com.zerotwo.focus.ui.screentime.ScreenTimeScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
     const val HOME = "home"
     const val BLOCKED_APPS = "blocked_apps"
+    const val SCREEN_TIME = "screen_time"
 }
 
 @Composable
@@ -30,11 +32,15 @@ fun AppNavHost(startDestination: String) {
         composable(Routes.HOME) {
             HomeScreen(
                 onOpenBlockedApps = { navController.navigate(Routes.BLOCKED_APPS) },
+                onOpenScreenTime = { navController.navigate(Routes.SCREEN_TIME) },
                 onReviewPermissions = { navController.navigate(Routes.ONBOARDING) },
             )
         }
         composable(Routes.BLOCKED_APPS) {
             BlockedAppsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.SCREEN_TIME) {
+            ScreenTimeScreen(onBack = { navController.popBackStack() })
         }
     }
 }

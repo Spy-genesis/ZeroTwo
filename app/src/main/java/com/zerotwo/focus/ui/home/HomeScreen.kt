@@ -56,6 +56,7 @@ import java.time.LocalTime
 @Composable
 fun HomeScreen(
     onOpenBlockedApps: () -> Unit,
+    onOpenScreenTime: () -> Unit,
     onReviewPermissions: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -182,7 +183,10 @@ fun HomeScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    Button(onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
+                    Button(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
+                        Text("Screen time")
+                    }
+                    OutlinedButton(onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
                         Text("Choose blocked apps")
                     }
                     OutlinedButton(onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {

@@ -4,9 +4,10 @@
 1. **Scaffold + permission onboarding** ✅
 2. **Blocking social apps** ✅
 3. **Mock timetable + class-hours blocking** ✅
-4. Mock ERP link: student ID + department picker (integration-ready, mocked for demo)
-5. Firebase anonymous auth + screen-time upload + batch/department leaderboard
-6. Polish + demo prep
+4. **Screen time stats + 7-day chart** ✅
+5. Mock ERP link: student ID + department picker (integration-ready, mocked for demo)
+6. Firebase anonymous auth + screen-time upload + batch/department leaderboard
+7. Polish + demo prep
 
 ## Done
 ### Phase 1 — Scaffold + onboarding
@@ -39,8 +40,14 @@
 - **Blocked apps screen:** during class you can add apps but not unblock them.
 - **Hidden demo mode:** tap the **"ZeroTwo" title 5 times quickly** → fake class "Operating Systems (Demo)" starting now for 60 min (auto-expires). A "Demo · tap to end" chip appears next to the title; tapping it (or 5 more taps) ends it.
 
+### Phase 4 — Screen time
+- **Data:** `screentime/ScreenTimeRepository.kt` builds per-app, per-day foreground time for the last 7 days from raw `UsageStatsManager.queryEvents` (not `INTERVAL_DAILY` buckets, which don't align to local midnight on many phones). Foreground → background = a session; switching apps, screen off and shutdown close open sessions; sessions crossing midnight are split. Launchers and System UI are excluded; apps under 1 min per day are hidden. Apps in `BlockedAppsConfig` are tagged "Social".
+- **Screen:** Home → "Screen time". Shows the selected day's total (big number), social-app time and 7-day average, a 7-day bar chart, and the per-app list (icon, name, time, thin share bar) for the selected day. Refreshes on resume. Without Usage Access, shows a message + "Open settings" instead of crashing.
+- **Chart:** `ui/screentime/WeeklyBarChart.kt`, plain Compose `Canvas`. Single series in the accent; selected day full strength, others faded; bars ≤ 24 dp with rounded tops; hairline gridlines at clean steps (15m/30m/1h/2h…, ≤ 4 lines); value label only on the selected bar. Tap a column to select that day. TalkBack reads all 7 totals.
+- **Manifest:** `<queries>` for launcher/home intents so other apps' names and icons are visible on Android 11+.
+
 ## Next
-Phase 4: mock ERP link — student ID + department/batch picker (integration-ready, mocked for demo), stored locally for the Phase 5 leaderboard.
+Phase 5: mock ERP link — student ID + department/batch picker (integration-ready, mocked for demo), stored locally for the Phase 6 leaderboard.
 
 ## Known issues
 - Android 13+ sideloaded APK (installed from file manager/browser): accessibility switch is greyed out ("restricted setting"). Fix: App info → ⋮ → Allow restricted settings. Installing with `adb install` avoids it.
@@ -49,6 +56,8 @@ Phase 4: mock ERP link — student ID + department/batch picker (integration-rea
 - Blocking does not survive a reboot until the app is opened once (no BOOT_COMPLETED receiver yet). The accessibility service restarts on boot by itself and still blocks during class, because the policy is checked directly — only the notification and the UsageStats fallback are missing.
 - The notification is now always shown (even when not blocking), since the service has to watch for class start.
 - Classes that cross midnight aren't supported (end must be after start; such entries are skipped). A demo started after 23:00 still blocks for its full 60 min, but its schedule row won't be marked "Now" after midnight.
+- Screen time: a session already running at 00:00 six days ago is missed (no start event in the window). Numbers may differ by a few minutes from Digital Wellbeing, which uses its own rules.
+- The chart wasn't rendered before commit (no device attached); check it on the phone.
 - Timetable uses device local time; changing the phone clock is a way around blocking (acceptable for the demo).
 - Lint: only "newer dependency version available" warnings; versions are pinned on purpose.
 - Usage access deep link with package URI only lands on our app on some ROMs; others show the full list.
