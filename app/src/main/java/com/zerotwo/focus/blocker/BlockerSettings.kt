@@ -3,19 +3,26 @@ package com.zerotwo.focus.blocker
 import android.content.Context
 import com.zerotwo.focus.config.BlockableApp
 import com.zerotwo.focus.config.BlockedAppsConfig
+import com.zerotwo.focus.config.TimetableConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class BlockerState(
-    val blockingEnabled: Boolean,
+    /** The user's on/off switch. Only matters outside class hours; classes always block. */
+    val manualBlockingEnabled: Boolean,
     /** IDs of config apps the user switched off. Storing the opt-outs means new config apps start blocked. */
     val disabledAppIds: Set<String>,
+    /** When the hidden demo class started (epoch ms), or 0 if demo mode is off. */
+    val demoStartedAtMillis: Long,
 ) {
     fun isAppSelected(app: BlockableApp) = app.id !in disabledAppIds
 
     val selectedApps: List<BlockableApp>
         get() = BlockedAppsConfig.DEFAULT_BLOCKED_APPS.filter(::isAppSelected)
+
+    fun isDemoActive(nowMillis: Long): Boolean =
+        demoStartedAtMillis > 0 && nowMillis < demoStartedAtMillis + TimetableConfig.DEMO_DURATION_MINUTES * 60_000
 }
 
 /**
@@ -28,15 +35,16 @@ class BlockerSettings private constructor(context: Context) {
 
     private val _state = MutableStateFlow(
         BlockerState(
-            blockingEnabled = prefs.getBoolean(KEY_ENABLED, false),
+            manualBlockingEnabled = prefs.getBoolean(KEY_MANUAL, false),
             disabledAppIds = prefs.getStringSet(KEY_DISABLED, emptySet())!!.toSet(),
+            demoStartedAtMillis = prefs.getLong(KEY_DEMO_STARTED, 0L),
         ),
     )
     val state: StateFlow<BlockerState> = _state.asStateFlow()
 
-    fun setBlockingEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
-        _state.value = _state.value.copy(blockingEnabled = enabled)
+    fun setManualBlockingEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_MANUAL, enabled).apply()
+        _state.value = _state.value.copy(manualBlockingEnabled = enabled)
     }
 
     fun setAppSelected(app: BlockableApp, selected: Boolean) {
@@ -45,16 +53,16 @@ class BlockerSettings private constructor(context: Context) {
         _state.value = _state.value.copy(disabledAppIds = disabled)
     }
 
-    /** The app to block for [packageName], or null if it shouldn't be blocked right now. */
-    fun blockedAppFor(packageName: String): BlockableApp? {
-        val current = _state.value
-        if (!current.blockingEnabled) return null
-        return current.selectedApps.firstOrNull { packageName in it.packages }
+    fun setDemoActive(active: Boolean) {
+        val startedAt = if (active) System.currentTimeMillis() else 0L
+        prefs.edit().putLong(KEY_DEMO_STARTED, startedAt).apply()
+        _state.value = _state.value.copy(demoStartedAtMillis = startedAt)
     }
 
     companion object {
-        private const val KEY_ENABLED = "blocking_enabled"
+        private const val KEY_MANUAL = "blocking_enabled" // Phase 2 key name, kept so the setting survives updates.
         private const val KEY_DISABLED = "disabled_app_ids"
+        private const val KEY_DEMO_STARTED = "demo_started_at"
 
         @Volatile private var instance: BlockerSettings? = null
 

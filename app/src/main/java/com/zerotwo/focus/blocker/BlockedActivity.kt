@@ -30,17 +30,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zerotwo.focus.timetable.format
 import com.zerotwo.focus.ui.theme.ZeroTwoTheme
 
 /** Full-screen block page shown on top of a blocked app. Back and "Go Home" both send the user home. */
 class BlockedActivity : ComponentActivity() {
 
-    private var appLabel by mutableStateOf("This app")
+    private var title by mutableStateOf("This app is blocked")
+    private var message by mutableStateOf(DEFAULT_MESSAGE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        readLabel(intent)
+        readExtras(intent)
         setContent {
             ZeroTwoTheme {
                 BackHandler { goHome() }
@@ -58,14 +60,14 @@ class BlockedActivity : ComponentActivity() {
                         )
                         Spacer(Modifier.size(24.dp))
                         Text(
-                            "$appLabel is blocked",
+                            title,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.size(12.dp))
                         Text(
-                            "ZeroTwo is keeping social apps closed so you can focus. You've got this.",
+                            message,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -80,11 +82,12 @@ class BlockedActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        readLabel(intent)
+        readExtras(intent)
     }
 
-    private fun readLabel(intent: Intent?) {
-        intent?.getStringExtra(EXTRA_APP_LABEL)?.let { appLabel = it }
+    private fun readExtras(intent: Intent?) {
+        intent?.getStringExtra(EXTRA_TITLE)?.let { title = it }
+        intent?.getStringExtra(EXTRA_MESSAGE)?.let { message = it }
     }
 
     private fun goHome() {
@@ -100,11 +103,20 @@ class BlockedActivity : ComponentActivity() {
     }
 
     companion object {
-        private const val EXTRA_APP_LABEL = "app_label"
+        private const val EXTRA_TITLE = "title"
+        private const val EXTRA_MESSAGE = "message"
+        private const val DEFAULT_MESSAGE = "ZeroTwo is keeping social apps closed so you can focus. You've got this."
 
-        fun launch(context: Context, appLabel: String) {
+        fun launch(context: Context, appLabel: String, status: BlockStatus) {
+            val (title, message) = when (status) {
+                is BlockStatus.InClass ->
+                    "You're in ${status.session.course}" to
+                        "$appLabel is blocked until ${status.session.end.format(context)}, when class ends."
+                else -> "$appLabel is blocked" to DEFAULT_MESSAGE
+            }
             val intent = Intent(context, BlockedActivity::class.java)
-                .putExtra(EXTRA_APP_LABEL, appLabel)
+                .putExtra(EXTRA_TITLE, title)
+                .putExtra(EXTRA_MESSAGE, message)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             try {
                 context.startActivity(intent)

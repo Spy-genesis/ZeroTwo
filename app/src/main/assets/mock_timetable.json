@@ -1,0 +1,25 @@
+{
+  "_comment": "MOCK TIMETABLE for the demo. In production this would come from the college ERP (integration-ready, mocked for demo). day = full English day name, times = 24h HH:mm, local device time.",
+  "classes": [
+    { "day": "Monday",    "start": "09:00", "end": "10:00", "course": "Data Structures" },
+    { "day": "Monday",    "start": "10:15", "end": "11:15", "course": "Discrete Mathematics" },
+    { "day": "Monday",    "start": "13:00", "end": "14:30", "course": "Digital Logic Lab" },
+
+    { "day": "Tuesday",   "start": "09:00", "end": "10:00", "course": "Operating Systems" },
+    { "day": "Tuesday",   "start": "11:30", "end": "12:30", "course": "Computer Networks" },
+    { "day": "Tuesday",   "start": "14:00", "end": "15:00", "course": "Technical Writing" },
+
+    { "day": "Wednesday", "start": "09:00", "end": "10:00", "course": "Data Structures" },
+    { "day": "Wednesday", "start": "10:15", "end": "11:15", "course": "Database Systems" },
+    { "day": "Wednesday", "start": "14:00", "end": "16:00", "course": "Operating Systems Lab" },
+
+    { "day": "Thursday",  "start": "09:00", "end": "10:00", "course": "Computer Networks" },
+    { "day": "Thursday",  "start": "10:15", "end": "11:15", "course": "Discrete Mathematics" },
+    { "day": "Thursday",  "start": "13:00", "end": "14:00", "course": "Database Systems" },
+
+    { "day": "Friday",    "start": "09:00", "end": "10:00", "course": "Operating Systems" },
+    { "day": "Friday",    "start": "10:15", "end": "12:15", "course": "Database Systems Lab" },
+
+    { "day": "Saturday",  "start": "10:00", "end": "11:00", "course": "Seminar" }
+  ]
+}

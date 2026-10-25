@@ -16,44 +16,30 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.zerotwo.focus.MainActivity
 import com.zerotwo.focus.R
+import com.zerotwo.focus.timetable.format
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Keeps ZeroTwo alive with a persistent notification (so OEM task killers leave it alone)
- * and polls UsageStats as a backup to the accessibility service.
+ * Keeps ZeroTwo alive with a persistent notification (so OEM task killers leave it alone),
+ * tracks class start/end, and polls UsageStats as a backup to the accessibility service.
  */
 class BlockerService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private var pollJob: Job? = null
+    private var loopJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val settings = BlockerSettings.get(this)
-        if (!settings.state.value.blockingEnabled) {
-            stopSelf()
-            return START_NOT_STICKY
-        }
-        if (!goForeground(settings.state.value)) return START_NOT_STICKY
-
-        if (pollJob == null) {
-            pollJob = scope.launch { pollForegroundApp() }
-            // Keep the notification text in sync with the blocked-app toggles.
-            scope.launch {
-                settings.state.collectLatest { state ->
-                    if (state.blockingEnabled) notificationManager().notify(NOTIFICATION_ID, buildNotification(state))
-                }
-            }
-        }
+        if (!goForeground(BlockPolicy.evaluate(this))) return START_NOT_STICKY
+        if (loopJob == null) loopJob = scope.launch { runLoop() }
         return START_STICKY
     }
 
@@ -62,20 +48,33 @@ class BlockerService : Service() {
         super.onDestroy()
     }
 
-    private suspend fun pollForegroundApp() {
+    /**
+     * Every second: re-evaluate the policy (classes start and end on their own),
+     * refresh the notification if the status changed, and run the UsageStats backup detector.
+     */
+    private suspend fun runLoop() {
         val detector = ForegroundAppDetector(this)
+        var shownText: Pair<String, String>? = null
         while (scope.isActive) {
-            detector.currentForegroundApp()?.let { AppBlocker.onForegroundApp(this, it) }
-            delay(POLL_INTERVAL_MS)
+            val status = BlockPolicy.evaluate(this)
+            val text = notificationText(status)
+            if (text != shownText) {
+                notificationManager().notify(NOTIFICATION_ID, buildNotification(status))
+                shownText = text
+            }
+            // Poll even when not blocking, so a class starting while Instagram is open still gets caught.
+            val foreground = detector.currentForegroundApp()
+            if (status.isBlocking && foreground != null) AppBlocker.onForegroundApp(this, foreground)
+            delay(LOOP_INTERVAL_MS)
         }
     }
 
-    private fun goForeground(state: BlockerState): Boolean = try {
+    private fun goForeground(status: BlockStatus): Boolean = try {
         createChannel()
         ServiceCompat.startForeground(
             this,
             NOTIFICATION_ID,
-            buildNotification(state),
+            buildNotification(status),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             } else {
@@ -90,18 +89,32 @@ class BlockerService : Service() {
         false
     }
 
-    private fun buildNotification(state: BlockerState): Notification {
+    private fun notificationText(status: BlockStatus): Pair<String, String> {
+        val count = BlockerSettings.get(this).state.value.selectedApps.size
+        val apps = "$count app${if (count == 1) "" else "s"}"
+        return when (status) {
+            is BlockStatus.InClass ->
+                "In ${status.session.course}" to "$apps blocked until ${status.session.end.format(this)}"
+            BlockStatus.Manual -> "Blocking is on" to "$apps blocked. Tap to manage."
+            is BlockStatus.Off -> "Not blocking" to (
+                status.nextClassToday?.let { "Next class: ${it.course} at ${it.start.format(this)}" }
+                    ?: "No more classes today"
+                )
+        }
+    }
+
+    private fun buildNotification(status: BlockStatus): Notification {
         val openApp = PendingIntent.getActivity(
             this,
             0,
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val count = state.selectedApps.size
+        val (title, text) = notificationText(status)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_block)
-            .setContentTitle("ZeroTwo is blocking social apps")
-            .setContentText("$count app${if (count == 1) "" else "s"} blocked. Tap to manage.")
+            .setContentTitle(title)
+            .setContentText(text)
             .setContentIntent(openApp)
             .setOngoing(true)
             .setSilent(true)
@@ -124,20 +137,18 @@ class BlockerService : Service() {
         private const val TAG = "BlockerService"
         private const val CHANNEL_ID = "blocker_status"
         private const val NOTIFICATION_ID = 1
-        private const val POLL_INTERVAL_MS = 1000L
+        private const val LOOP_INTERVAL_MS = 1000L
 
-        /** Starts the service if blocking is on. Safe to call repeatedly; never throws. */
-        fun startIfEnabled(context: Context) {
-            if (!BlockerSettings.get(context).state.value.blockingEnabled) return
+        /**
+         * Starts the always-on scheduler. It runs even with the manual switch off, because a class
+         * can start at any moment. Safe to call repeatedly; never throws.
+         */
+        fun start(context: Context) {
             try {
                 ContextCompat.startForegroundService(context, Intent(context, BlockerService::class.java))
             } catch (e: Exception) {
                 Log.w(TAG, "Could not start blocker service", e)
             }
-        }
-
-        fun stop(context: Context) {
-            context.stopService(Intent(context, BlockerService::class.java))
         }
     }
 }

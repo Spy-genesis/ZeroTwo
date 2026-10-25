@@ -18,13 +18,16 @@ object AppBlocker {
     @Synchronized
     fun onForegroundApp(context: Context, packageName: String) {
         if (packageName == context.packageName) return
-        val app = BlockerSettings.get(context).blockedAppFor(packageName) ?: return
+        val app = BlockerSettings.get(context).state.value.selectedApps
+            .firstOrNull { packageName in it.packages } ?: return
+        val status = BlockPolicy.evaluate(context)
+        if (!status.isBlocking) return
 
         val now = SystemClock.elapsedRealtime()
         if (packageName == lastBlockedPackage && now - lastBlockedAt < DEBOUNCE_MS) return
         lastBlockedPackage = packageName
         lastBlockedAt = now
 
-        BlockedActivity.launch(context, app.label)
+        BlockedActivity.launch(context, app.label, status)
     }
 }

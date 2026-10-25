@@ -32,6 +32,7 @@ fun BlockedAppsScreen(
     viewModel: BlockedAppsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val locked by viewModel.locked.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -51,7 +52,11 @@ fun BlockedAppsScreen(
         ) {
             item {
                 Text(
-                    "Switched-on apps are blocked whenever blocking is active.",
+                    if (locked) {
+                        "Class is in session. You can add apps, but can't unblock any until class ends."
+                    } else {
+                        "Switched-on apps are blocked during class, and outside class when blocking is switched on."
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -63,7 +68,11 @@ fun BlockedAppsScreen(
                     headlineContent = { Text(app.label) },
                     supportingContent = { Text(app.packages.joinToString()) },
                     trailingContent = {
-                        Switch(checked = selected, onCheckedChange = { viewModel.setAppSelected(app, it) })
+                        Switch(
+                            checked = selected,
+                            enabled = !(locked && selected),
+                            onCheckedChange = { viewModel.setAppSelected(app, it) },
+                        )
                     },
                 )
                 HorizontalDivider()
