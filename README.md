@@ -2,8 +2,6 @@
 
 **A class-aware screen time blocker for Android.** ZeroTwo knows your timetable: when a lecture starts, social apps lock automatically, and they unlock when class ends. Outside class you decide. A department/batch leaderboard ranks classmates by lowest screen time.
 
-Built in 48 hours for a hackathon.
-
 <p>
   <img src="docs/screenshots/home.png" width="23%" alt="Home screen during a class" />
   <img src="docs/screenshots/block.png" width="23%" alt="Block screen: You're in Operating Systems" />
