@@ -15,8 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,6 +26,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +38,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.cloud.LeaderboardEntry
 import com.zerotwo.focus.screentime.formatDuration
+import com.zerotwo.focus.ui.theme.HudCard
+import com.zerotwo.focus.ui.theme.HudNumber
+import com.zerotwo.focus.ui.theme.HudShapes
+import com.zerotwo.focus.ui.theme.HudTone
+import com.zerotwo.focus.ui.theme.MonoFamily
+import com.zerotwo.focus.ui.theme.HudButtonShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +57,8 @@ fun LeaderboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Leaderboard") },
+                title = { Text("LEADERBOARD") },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -69,7 +75,7 @@ fun LeaderboardScreen(
         Column(Modifier.fillMaxSize().padding(padding)) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 if (profile != null) {
-                    Text(profile.department, style = MaterialTheme.typography.titleMedium)
+                    Text(profile.department.uppercase(), style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Batch ${profile.batch} · lowest screen time ranks first",
                         style = MaterialTheme.typography.bodyMedium,
@@ -81,21 +87,31 @@ fun LeaderboardScreen(
                         SegmentedButton(
                             selected = state.day == day,
                             onClick = { viewModel.selectDay(day) },
-                            shape = SegmentedButtonDefaults.itemShape(i, LeaderboardDay.entries.size),
-                        ) { Text(day.label) }
+                            shape = SegmentedButtonDefaults.itemShape(i, LeaderboardDay.entries.size, HudShapes.small),
+                            colors = SegmentedButtonDefaults.colors(
+                                activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                activeBorderColor = MaterialTheme.colorScheme.primary,
+                                inactiveContainerColor = MaterialTheme.colorScheme.background,
+                                inactiveBorderColor = MaterialTheme.colorScheme.outline,
+                            ),
+                        ) { Text(day.label.uppercase()) }
                     }
                 }
             }
 
             Box(Modifier.fillMaxSize()) {
                 when (val content = state.content) {
-                    LeaderboardContent.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    LeaderboardContent.Loading -> CircularProgressIndicator(
+                        Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
                     LeaderboardContent.NotConfigured -> Message(
                         "Firebase isn't set up",
                         "Add app/google-services.json and rebuild. Steps are in PROGRESS.md.",
                     )
                     is LeaderboardContent.Error -> Message("Couldn't load the leaderboard", content.message) {
-                        Button(onClick = viewModel::refresh) { Text("Try again") }
+                        Button(shape = HudButtonShape, onClick = viewModel::refresh) { Text("Try again") }
                     }
                     is LeaderboardContent.Loaded -> Ranking(content, myId = profile?.studentId)
                 }
@@ -113,7 +129,7 @@ private fun Ranking(content: LeaderboardContent.Loaded, myId: String?) {
     ) {
         if (content.isDemo) {
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                HudCard(Modifier.fillMaxWidth(), tone = HudTone.Pink) {
                     Text(
                         "Demo mode: classmates marked \"sample\" are made-up data shown only on this phone.",
                         style = MaterialTheme.typography.bodySmall,
@@ -129,7 +145,7 @@ private fun Ranking(content: LeaderboardContent.Loaded, myId: String?) {
         }
         item {
             Text(
-                if (myRank != null) "You're #$myRank of ${content.entries.size}" else "${content.entries.size} students",
+                (if (myRank != null) "You're #$myRank of ${content.entries.size}" else "${content.entries.size} students").uppercase(),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -150,20 +166,14 @@ private fun Ranking(content: LeaderboardContent.Loaded, myId: String?) {
 
 @Composable
 private fun LeaderboardRow(entry: LeaderboardEntry, rank: Int, isMe: Boolean) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = if (isMe) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
-    ) {
+    HudCard(Modifier.fillMaxWidth(), tone = if (isMe) HudTone.Active else HudTone.Neutral) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "#$rank",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.width(48.dp),
+                "#%02d".format(rank),
+                style = HudNumber,
+                // Podium ranks get the pink accent.
+                color = if (rank <= 3) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(52.dp),
             )
             Column(Modifier.weight(1f)) {
                 Text(
@@ -174,10 +184,11 @@ private fun LeaderboardRow(entry: LeaderboardEntry, rank: Int, isMe: Boolean) {
                 Text(
                     "Social ${formatDuration(entry.socialMillis)}" + if (entry.isDemo) " · sample" else "",
                     style = MaterialTheme.typography.bodySmall,
+                    fontFamily = MonoFamily,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(formatDuration(entry.totalMillis), style = MaterialTheme.typography.titleMedium)
+            Text(formatDuration(entry.totalMillis), style = HudNumber)
         }
     }
 }
@@ -189,7 +200,7 @@ private fun Message(title: String, body: String, action: @Composable () -> Unit 
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        Text(title.uppercase(), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Text(
             body,
             style = MaterialTheme.typography.bodyMedium,

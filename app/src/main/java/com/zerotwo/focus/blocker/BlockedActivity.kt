@@ -7,7 +7,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +35,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.zerotwo.focus.timetable.format
+import com.zerotwo.focus.ui.theme.HudShapes
+import com.zerotwo.focus.ui.theme.MonoFamily
 import com.zerotwo.focus.ui.theme.ZeroTwoTheme
+import com.zerotwo.focus.ui.theme.HudButtonShape
 
 /** Full-screen block page shown on top of a blocked app. Back and "Go Home" both send the user home. */
 class BlockedActivity : ComponentActivity() {
@@ -41,7 +48,10 @@ class BlockedActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         readExtras(intent)
         setContent {
             ZeroTwoTheme {
@@ -52,17 +62,32 @@ class BlockedActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Icon(
-                            Icons.Filled.Lock,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(72.dp),
-                        )
+                        // Lock inside a red chamfered frame: the one "blocked" red moment in the app.
+                        Box(
+                            Modifier
+                                .size(112.dp)
+                                .border(2.dp, MaterialTheme.colorScheme.error, HudShapes.large)
+                                .background(MaterialTheme.colorScheme.errorContainer, HudShapes.large),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Filled.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(56.dp),
+                            )
+                        }
                         Spacer(Modifier.size(24.dp))
                         Text(
-                            title,
+                            "// ACCESS DENIED",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontFamily = MonoFamily,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text(
+                            title.uppercase(),
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.size(12.dp))
@@ -73,7 +98,7 @@ class BlockedActivity : ComponentActivity() {
                             textAlign = TextAlign.Center,
                         )
                         Spacer(Modifier.size(32.dp))
-                        Button(onClick = ::goHome, modifier = Modifier.fillMaxWidth()) { Text("Go Home") }
+                        Button(shape = HudButtonShape, onClick = ::goHome, modifier = Modifier.fillMaxWidth()) { Text("GO HOME") }
                     }
                 }
             }

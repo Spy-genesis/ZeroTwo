@@ -7,6 +7,7 @@ import android.os.SystemClock
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -53,7 +54,15 @@ import com.zerotwo.focus.config.DemoConfig
 import com.zerotwo.focus.screentime.formatDuration
 import com.zerotwo.focus.timetable.ClassSession
 import com.zerotwo.focus.timetable.format
+import com.zerotwo.focus.ui.theme.HudCard
+import com.zerotwo.focus.ui.theme.HudNumber
+import com.zerotwo.focus.ui.theme.HudSectionLabel
+import com.zerotwo.focus.ui.theme.HudTone
+import com.zerotwo.focus.ui.theme.MonoFamily
 import java.time.LocalTime
+import com.zerotwo.focus.ui.theme.HudButtonShape
+import com.zerotwo.focus.ui.theme.hudTextButtonColors
+import com.zerotwo.focus.ui.theme.hudOutlinedButtonColors
 
 @Composable
 fun HomeScreen(
@@ -114,9 +123,9 @@ fun HomeScreen(
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "ZeroTwo",
+                        "ZEROTWO",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Black,
                         modifier = Modifier.clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null, // stays hidden: no ripple
@@ -125,20 +134,25 @@ fun HomeScreen(
                     )
                     if (isDemo) {
                         Spacer(Modifier.width(12.dp))
-                        AssistChip(onClick = { viewModel.toggleDemo() }, label = { Text("Demo · tap to end") })
+                        AssistChip(
+                            onClick = { viewModel.toggleDemo() },
+                            label = { Text("DEMO · TAP TO END") },
+                            colors = AssistChipDefaults.assistChipColors(labelColor = MaterialTheme.colorScheme.secondary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                        )
                     }
                 }
             }
 
             if (!state.permissionsOk) {
                 item {
-                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                    HudCard(Modifier.fillMaxWidth(), tone = HudTone.Alert) {
                         Column(Modifier.padding(16.dp)) {
                             Text(
                                 "Some permissions were turned off. Blocking may not work until you grant them again.",
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                             )
-                            Button(onClick = onReviewPermissions, modifier = Modifier.padding(top = 12.dp)) {
+                            Button(shape = HudButtonShape, onClick = onReviewPermissions, modifier = Modifier.padding(top = 12.dp)) {
                                 Text("Fix permissions")
                             }
                         }
@@ -149,10 +163,10 @@ fun HomeScreen(
             item { StatusCard(state.status, state.blocker.selectedApps.size) }
 
             item {
-                Card(onClick = onOpenScreenTime, modifier = Modifier.fillMaxWidth()) {
+                HudCard(Modifier.fillMaxWidth(), onClick = onOpenScreenTime) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Screen time today", style = MaterialTheme.typography.titleMedium)
+                            Text("SCREEN TIME TODAY", style = MaterialTheme.typography.titleMedium)
                             Text(
                                 "Tap for the last 7 days",
                                 style = MaterialTheme.typography.bodySmall,
@@ -161,18 +175,18 @@ fun HomeScreen(
                         }
                         Text(
                             todayMillis?.let(::formatDuration) ?: "—",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.SemiBold,
+                            style = HudNumber.copy(fontSize = 24.sp),
+                            color = MaterialTheme.colorScheme.secondary,
                         )
                     }
                 }
             }
 
             item {
-                Card(Modifier.fillMaxWidth()) {
+                HudCard(Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Block outside class hours", style = MaterialTheme.typography.titleMedium)
+                            Text("BLOCK OUTSIDE CLASS HOURS", style = MaterialTheme.typography.titleMedium)
                             Text(
                                 if (inClass) {
                                     "Classes always block. This switch applies once class ends."
@@ -192,11 +206,7 @@ fun HomeScreen(
             }
 
             item {
-                Text(
-                    "Today's schedule",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
+                HudSectionLabel("Today's schedule", Modifier.padding(top = 8.dp))
             }
             if (state.todaysClasses.isEmpty()) {
                 item {
@@ -214,13 +224,13 @@ fun HomeScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    Button(onClick = onOpenLeaderboard, modifier = Modifier.fillMaxWidth()) {
+                    Button(shape = HudButtonShape, onClick = onOpenLeaderboard, modifier = Modifier.fillMaxWidth()) {
                         Text("Leaderboard")
                     }
-                    OutlinedButton(onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
                         Text("Choose blocked apps")
                     }
-                    OutlinedButton(onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {
                         Text("Review permissions")
                     }
                 }
@@ -235,7 +245,7 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = {
+                        TextButton(shape = HudButtonShape, colors = hudTextButtonColors(), onClick = {
                             viewModel.signOut()
                             onSignedOut()
                         }) { Text("Sign out") }
@@ -259,18 +269,25 @@ private fun StatusCard(status: BlockStatus, appCount: Int) {
                 ?: "No more classes today"
             )
     }
-    val colors = if (status.isBlocking) {
-        CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-    } else {
-        CardDefaults.cardColors()
-    }
-    Card(Modifier.fillMaxWidth(), colors = colors) {
+    HudCard(Modifier.fillMaxWidth(), tone = if (status.isBlocking) HudTone.Active else HudTone.Neutral) {
         Column(Modifier.padding(16.dp)) {
-            Text(headline, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-            Text(detail, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+            Text(
+                if (status.isBlocking) "● SHIELD ACTIVE" else "○ SHIELD IDLE",
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = MonoFamily,
+                color = if (status.isBlocking) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                headline.uppercase(),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
     }
 }
@@ -280,27 +297,23 @@ private fun ScheduleRow(session: ClassSession, now: LocalTime) {
     val context = LocalContext.current
     val isNow = session.isInSession(now)
     val isPast = session.isOver(now)
-    Card(
-        modifier = Modifier.fillMaxWidth().alpha(if (isPast) 0.5f else 1f),
-        colors = if (isNow) {
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-        } else {
-            CardDefaults.cardColors()
-        },
+    HudCard(
+        modifier = Modifier.fillMaxWidth().alpha(if (isPast) 0.45f else 1f),
+        tone = if (isNow) HudTone.Active else HudTone.Neutral,
     ) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "${session.start.format(context)} – ${session.end.format(context)}",
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.width(132.dp),
+                style = HudNumber.copy(fontSize = 12.sp, fontWeight = FontWeight.Normal),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(150.dp),
             )
             Text(session.course, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             if (isNow) {
                 Text(
-                    "Now",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
+                    "NOW",
+                    style = HudNumber.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.secondary,
                 )
             }
         }

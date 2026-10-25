@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -51,9 +51,15 @@ import com.zerotwo.focus.permissions.AppPermission
 import com.zerotwo.focus.permissions.SettingsLauncher
 import com.zerotwo.focus.screentime.AppUsage
 import com.zerotwo.focus.screentime.formatDuration
+import com.zerotwo.focus.ui.theme.HudCard
+import com.zerotwo.focus.ui.theme.HudNumber
+import com.zerotwo.focus.ui.theme.HudNumberLarge
+import com.zerotwo.focus.ui.theme.HudSectionLabel
+import com.zerotwo.focus.ui.theme.HudShapes
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import com.zerotwo.focus.ui.theme.HudButtonShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +73,8 @@ fun ScreenTimeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Screen time") },
+                title = { Text("SCREEN TIME") },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -95,13 +102,13 @@ private fun NoPermission() {
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Usage access is off", style = MaterialTheme.typography.titleLarge)
+        Text("USAGE ACCESS IS OFF", style = MaterialTheme.typography.titleLarge)
         Text(
             "ZeroTwo needs usage access to measure screen time.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Button(onClick = { SettingsLauncher.open(context, AppPermission.USAGE_ACCESS) }) { Text("Open settings") }
+        Button(shape = HudButtonShape, onClick = { SettingsLauncher.open(context, AppPermission.USAGE_ACCESS) }) { Text("Open settings") }
     }
 }
 
@@ -122,15 +129,14 @@ private fun Loaded(state: ScreenTimeUiState.Loaded, onSelect: (Int) -> Unit) {
                     today -> "Today"
                     today.minusDays(1) -> "Yesterday"
                     else -> selected.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-                },
+                }.uppercase(),
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.secondary,
             )
             // Hero figure: the day's total.
             Text(
                 formatDuration(selected.totalMillis),
-                fontSize = 48.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = HudNumberLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
@@ -140,7 +146,7 @@ private fun Loaded(state: ScreenTimeUiState.Loaded, onSelect: (Int) -> Unit) {
             )
         }
         item {
-            Card(Modifier.fillMaxWidth()) {
+            HudCard(Modifier.fillMaxWidth()) {
                 WeeklyBarChart(
                     days = state.days,
                     selectedIndex = state.selectedIndex,
@@ -156,7 +162,7 @@ private fun Loaded(state: ScreenTimeUiState.Loaded, onSelect: (Int) -> Unit) {
             )
         }
         item {
-            Text("Apps", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            HudSectionLabel("Apps", Modifier.padding(top = 8.dp))
         }
         if (selected.apps.isEmpty()) {
             item {
@@ -183,16 +189,16 @@ private fun AppRow(app: AppUsage, topMillis: Long) {
                 if (app.isSocial) {
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "Social",
+                        "SOCIAL",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
+                            .background(MaterialTheme.colorScheme.secondaryContainer, HudShapes.extraSmall)
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                Text(formatDuration(app.millis), style = MaterialTheme.typography.bodyMedium)
+                Text(formatDuration(app.millis), style = HudNumber.copy(fontSize = 14.sp))
             }
             // Share of the top app's time: one hue on a lighter track.
             Box(

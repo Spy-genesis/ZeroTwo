@@ -32,9 +32,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.config.ErpMockConfig
+import com.zerotwo.focus.ui.theme.HudNumber
+import com.zerotwo.focus.ui.theme.HudButtonShape
 
 /** College ERP sign-in. Integration-ready, mocked for demo: see MockErpClient. */
 @Composable
@@ -56,7 +60,7 @@ fun ErpLoginScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("Sign in with College ERP", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+            Text("SIGN IN WITH COLLEGE ERP", style = MaterialTheme.typography.headlineMedium)
             Text(
                 "Links your screen time to your department's leaderboard. Demo build: any 5-digit ERP works.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -70,6 +74,7 @@ fun ErpLoginScreen(
                     viewModel.setStudentId(input.filter(Char::isDigit).take(ErpMockConfig.ERP_ID_LENGTH))
                 },
                 label = { Text("ERP") },
+                textStyle = HudNumber.copy(fontSize = 20.sp, letterSpacing = 0.3.em),
                 placeholder = { Text("e.g. 24117") },
                 supportingText = { Text("${state.studentId.length}/${ErpMockConfig.ERP_ID_LENGTH} digits") },
                 singleLine = true,
@@ -87,6 +92,7 @@ fun ErpLoginScreen(
             }
 
             Button(
+                shape = HudButtonShape,
                 onClick = viewModel::signIn,
                 enabled = !state.signingIn,
                 modifier = Modifier.fillMaxWidth(),

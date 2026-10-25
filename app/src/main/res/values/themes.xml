@@ -1,4 +1,10 @@
 <resources>
-    <!-- Window-level theme only; all UI colors come from the Compose theme. -->
-    <style name="Theme.ZeroTwo" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Window-level theme only; all UI colors come from the Compose theme (ui/theme/Color.kt).
+         Dark window background so there's no white flash before Compose draws. -->
+    <style name="Theme.ZeroTwo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/hud_background</item>
+        <item name="android:colorBackground">@color/hud_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>

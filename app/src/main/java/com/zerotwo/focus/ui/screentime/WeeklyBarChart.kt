@@ -20,6 +20,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.zerotwo.focus.screentime.DailyUsage
 import com.zerotwo.focus.screentime.formatDuration
+import com.zerotwo.focus.ui.theme.MonoFamily
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -43,7 +44,8 @@ fun WeeklyBarChart(
     val grid = MaterialTheme.colorScheme.outlineVariant
     val textPrimary = MaterialTheme.colorScheme.onSurface
     val textMuted = MaterialTheme.colorScheme.onSurfaceVariant
-    val labelStyle = MaterialTheme.typography.labelSmall
+    // Chart numbers and day names use the monospace face, like every other readout.
+    val labelStyle = MaterialTheme.typography.labelSmall.copy(fontFamily = MonoFamily)
     val today = LocalDate.now()
 
     val maxMinutes = (days.maxOfOrNull { it.totalMillis } ?: 0L) / 60_000

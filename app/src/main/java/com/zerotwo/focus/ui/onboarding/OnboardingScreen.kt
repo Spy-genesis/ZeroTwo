@@ -41,9 +41,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.permissions.AppPermission
 import com.zerotwo.focus.permissions.SettingsLauncher
-import com.zerotwo.focus.ui.theme.Granted
-import com.zerotwo.focus.ui.theme.NotGranted
+import com.zerotwo.focus.ui.theme.HudBlocked
+import com.zerotwo.focus.ui.theme.HudCard
+import com.zerotwo.focus.ui.theme.HudMint
+import com.zerotwo.focus.ui.theme.HudTone
+import com.zerotwo.focus.ui.theme.MonoFamily
 import kotlinx.coroutines.launch
+import com.zerotwo.focus.ui.theme.HudButtonShape
+import com.zerotwo.focus.ui.theme.hudTextButtonColors
+import com.zerotwo.focus.ui.theme.hudOutlinedButtonColors
 
 @Composable
 fun OnboardingScreen(
@@ -75,6 +81,7 @@ fun OnboardingScreen(
                     )
                 }
                 Button(
+                    shape = HudButtonShape,
                     onClick = onContinue,
                     enabled = state.requiredGranted,
                     modifier = Modifier.fillMaxWidth(),
@@ -88,7 +95,7 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text("Set up ZeroTwo", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+                Text("SET UP ZEROTWO", style = MaterialTheme.typography.headlineMedium)
                 Spacer(Modifier.size(4.dp))
                 Text(
                     "ZeroTwo needs a few Android settings switched on to block social apps during class. " +
@@ -103,8 +110,10 @@ fun OnboardingScreen(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "${state.grantedCount} of ${state.statuses.size} granted",
+                    "${state.grantedCount}/${state.statuses.size} GRANTED",
                     style = MaterialTheme.typography.labelMedium,
+                    fontFamily = MonoFamily,
+                    color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
@@ -135,11 +144,11 @@ private fun PermissionCard(
     onOpenAppInfo: () -> Unit,
 ) {
     val permission = status.permission
-    Card(Modifier.fillMaxWidth()) {
+    HudCard(Modifier.fillMaxWidth(), tone = if (status.granted) HudTone.Neutral else HudTone.Active) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    permission.title,
+                    permission.title.uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -161,14 +170,14 @@ private fun PermissionCard(
                     )
                 }
                 Row(Modifier.padding(top = 12.dp)) {
-                    Button(onClick = onOpenSettings) { Text("Open settings") }
+                    Button(shape = HudButtonShape, onClick = onOpenSettings) { Text("Open settings") }
                     if (permission == AppPermission.ACCESSIBILITY) {
                         Spacer(Modifier.width(8.dp))
-                        TextButton(onClick = onOpenAppInfo) { Text("App info") }
+                        TextButton(shape = HudButtonShape, colors = hudTextButtonColors(), onClick = onOpenAppInfo) { Text("App info") }
                     }
                 }
             } else {
-                OutlinedButton(onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
+                OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
                     Text("Manage")
                 }
             }
@@ -178,7 +187,7 @@ private fun PermissionCard(
 
 @Composable
 private fun StatusBadge(granted: Boolean) {
-    val color = if (granted) Granted else NotGranted
+    val color = if (granted) HudMint else HudBlocked
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = if (granted) Icons.Filled.CheckCircle else Icons.Filled.Warning,
@@ -188,7 +197,7 @@ private fun StatusBadge(granted: Boolean) {
         )
         Spacer(Modifier.width(4.dp))
         Text(
-            if (granted) "Granted" else "Not granted",
+            if (granted) "GRANTED" else "NOT GRANTED",
             style = MaterialTheme.typography.labelLarge,
             color = color,
         )
@@ -208,9 +217,9 @@ private fun oemBrand(): String? {
 
 @Composable
 private fun OemHintCard(brand: String, onOpenAppInfo: () -> Unit) {
-    Card(Modifier.fillMaxWidth()) {
+    HudCard(Modifier.fillMaxWidth(), tone = HudTone.Pink) {
         Column(Modifier.padding(16.dp)) {
-            Text("Extra step on $brand phones", style = MaterialTheme.typography.titleMedium)
+            Text("Extra step on $brand phones".uppercase(), style = MaterialTheme.typography.titleMedium)
             Text(
                 "In App info, allow \"Autostart\" and, if listed, \"Display pop-up windows while running in " +
                     "background\". Without them the block screen may not appear. ZeroTwo can't check these for you.",
@@ -218,7 +227,7 @@ private fun OemHintCard(brand: String, onOpenAppInfo: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp),
             )
-            OutlinedButton(onClick = onOpenAppInfo, modifier = Modifier.padding(top = 12.dp)) { Text("Open app info") }
+            OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenAppInfo, modifier = Modifier.padding(top = 12.dp)) { Text("Open app info") }
         }
     }
 }

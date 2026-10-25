@@ -74,6 +74,15 @@
 - **Tests:** first JVM unit tests (`./gradlew testDebugUnitTest`): `ClassSessionTest` (incl. midnight wrap) and `FormatDurationTest`. 3/3 pass.
 - **DEMO.md:** pre-stage checklist, 60-second script, recovery steps, Q&A talking points.
 
+### UI re-theme — "mecha-cockpit HUD" (v1.0.2)
+UI only; no logic or behavior changes.
+- **Palette:** every color lives in `ui/theme/Color.kt`: background `#0B0508`, cards `#1A0A10` / elevated `#26101A`, primary crimson `#E0143C`, secondary hot pink `#FF4D8D`, highlight `#FFE3EC`, blocked/error `#FF2D2D`, success mint `#5CF2B0` (only the GRANTED badge), text `#FFE3EC` / `#B98A99`. Always dark (no light variant); dynamic color off.
+- **Type:** `ui/theme/Type.kt`. Headings Orbitron (bold, wide tracking, uppercased at call sites since Compose has no text-transform), body Inter, numbers JetBrains Mono (`HudNumber`, `HudNumberLarge`, chart labels, schedule times, ranks, durations, ERP field). Fonts bundled in `res/font`; OFL licenses in `licenses/`.
+- **Shapes:** `ui/theme/Shape.kt`: chamfered (cut-corner) cards, fields, chips and buttons.
+- **Components:** `ui/theme/HudComponents.kt`: `HudCard` (1dp frame; tones Neutral / Active = crimson / Alert = red / Pink), `HudSectionLabel` (crimson tick + uppercase heading), pink outlined/text button colors (crimson text on near-black failed contrast).
+- **Screens:** status card with "● SHIELD ACTIVE" readout; current class / your leaderboard row / un-granted permissions framed in crimson; podium ranks in pink; block screen with a red framed lock and "// ACCESS DENIED". Dark window background + light system-bar icons (no white flash, readable bars in system light mode); launcher icon background crimson.
+- Checked by rendering onboarding, sign-in, Home (demo), leaderboard (demo) and the block screen with Robolectric + Roborazzi (temporary, not committed).
+
 ## Next
 All planned phases done. Before demo day: run the full DEMO.md flow on the real phone once, with and without Wi-Fi.
 
