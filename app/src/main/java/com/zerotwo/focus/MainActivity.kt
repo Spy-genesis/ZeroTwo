@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
         )
-        // Skip onboarding when everything required is already granted, and sign-in when already signed in.
         val start = when {
             !PermissionChecker.allRequiredGranted(this) -> Routes.ONBOARDING
             StudentProfileStore.get(this).profile.value == null -> Routes.ERP_LOGIN
