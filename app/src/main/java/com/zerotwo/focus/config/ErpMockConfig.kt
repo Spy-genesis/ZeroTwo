@@ -15,7 +15,7 @@ object ErpMockConfig {
         "ACF",
     )
 
-    val BATCHES: List<String> = listOf("2022", "2023", "2024", "2025")
+    val BATCHES: List<String> = listOf("2022", "2023", "2024", "2025", "2026")
 
     /** ERP IDs are exactly 5 digits, e.g. 24117. */
     const val ERP_ID_LENGTH = 5
