@@ -87,6 +87,21 @@ UI only; no logic or behavior changes.
 - Batch picker now goes up to 2026.
 - `README.md` with screenshots (`docs/screenshots/`), features, configuration files, build, Firebase setup, permissions.
 
+### Calendar-based blocking
+- **Permission:** `READ_CALENDAR` (read-only). Optional "Calendar" card in onboarding: shows Android's dialog; once denied for good, opens the app's settings page. Same Granted/Not granted badge.
+- **Reading:** `calendar/CalendarRepository.kt` queries `CalendarContract.Calendars` and `CalendarContract.Instances` (recurring events expanded) for yesterday → end of tomorrow; cancelled instances skipped; all-day events re-anchored from UTC to local midnight.
+- **Cache:** `calendar/CalendarMonitor.kt`. The block check reads a cached snapshot (it runs every second and on every app switch). Refreshed every 60 s by `BlockerService`, by a `ContentObserver` on `CalendarContract.CONTENT_URI` (edits apply within seconds), on screen resume, and lazily if older than 60 s or the permission changed.
+- **Settings:** Home → **Calendar settings** (`ui/calendar/`): device calendars with checkboxes, keyword filter (case-insensitive "title contains"; empty = all), "Count all-day events" (off by default), and a live "Blocks today" preview. Saved in SharedPreferences (`calendar/CalendarSettings.kt`).
+- **Source of truth** (`blocker/BlockPolicy.kt`):
+  1. Demo mode → fake class.
+  2. Calendar set up (permission **and** at least one checked calendar that still exists) → matching event happening now → block with **"You're in [event title]"** until it ends. Overlaps: the most recently started event wins.
+  3. Calendar not set up (no permission, or nothing checked) → the mock timetable, as before.
+  4. Manual switch.
+  The blocking engine (detectors, `AppBlocker`, block screen) is unchanged; only the policy and the texts gained an `InEvent` status.
+- **Home:** today's schedule now comes from the calendar when it's set up ("FROM CALENDAR" / "BUILT-IN TIMETABLE" tag), with NOW / past styling; a pink "Connect your calendar" card when access is off or no calendar is checked. Notification and status card say "In [event]".
+- **States:** no permission, no calendars on the phone, nothing checked, no matching events: each has its own message; provider errors and revoked permission fall back to the timetable.
+- **Tests:** `CalendarRulesTest` (11): start-inclusive/end-exclusive, events crossing midnight (active on both sides, listed on both days), back-to-back hand-over at the boundary, overlaps, selected calendars only, keyword, all-day off/on, UTC→local all-day, next event today, "calendar active" rules. 16/16 tests pass.
+
 ## Next
 All planned phases done. Before demo day: run the full DEMO.md flow on the real phone once, with and without Wi-Fi.
 

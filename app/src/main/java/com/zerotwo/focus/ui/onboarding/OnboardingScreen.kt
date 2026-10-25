@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.permissions.AppPermission
 import com.zerotwo.focus.permissions.SettingsLauncher
+import com.zerotwo.focus.ui.calendar.rememberCalendarAccessRequest
 import com.zerotwo.focus.ui.theme.HudBlocked
 import com.zerotwo.focus.ui.theme.HudCard
 import com.zerotwo.focus.ui.theme.HudMint
@@ -63,6 +64,9 @@ fun OnboardingScreen(
 
     // Re-check every time we come back from a Settings screen.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
+
+    // Calendar is a runtime permission: show Android's dialog rather than a Settings page.
+    val requestCalendar = rememberCalendarAccessRequest { viewModel.refresh() }
 
     fun showCouldNotOpen() = scope.launch {
         snackbar.showSnackbar("Couldn't open Settings. Open Settings > Apps > ZeroTwo manually.")
@@ -121,7 +125,10 @@ fun OnboardingScreen(
                 PermissionCard(
                     status = status,
                     onOpenSettings = {
-                        if (!SettingsLauncher.open(context, status.permission)) showCouldNotOpen()
+                        when {
+                            status.permission == AppPermission.CALENDAR -> requestCalendar()
+                            !SettingsLauncher.open(context, status.permission) -> showCouldNotOpen()
+                        }
                     },
                     onOpenAppInfo = {
                         if (!SettingsLauncher.openAppDetails(context)) showCouldNotOpen()
@@ -170,7 +177,9 @@ private fun PermissionCard(
                     )
                 }
                 Row(Modifier.padding(top = 12.dp)) {
-                    Button(shape = HudButtonShape, onClick = onOpenSettings) { Text("Open settings") }
+                    Button(shape = HudButtonShape, onClick = onOpenSettings) {
+                        Text(if (permission == AppPermission.CALENDAR) "Allow access" else "Open settings")
+                    }
                     if (permission == AppPermission.ACCESSIBILITY) {
                         Spacer(Modifier.width(8.dp))
                         TextButton(shape = HudButtonShape, colors = hudTextButtonColors(), onClick = onOpenAppInfo) { Text("App info") }

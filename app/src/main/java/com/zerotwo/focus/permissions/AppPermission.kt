@@ -24,6 +24,12 @@ enum class AppPermission(
         why = "Detects which app you just opened so it can be blocked instantly.",
         required = true,
     ),
+    CALENDAR(
+        title = "Calendar",
+        why = "Blocks during events in the calendars you pick, like your lecture schedule. " +
+            "Without it, ZeroTwo uses the built-in timetable.",
+        required = false,
+    ),
     BATTERY_OPTIMIZATION(
         title = "Ignore battery optimization",
         why = "Stops Android from killing the blocker in the background. Recommended.",

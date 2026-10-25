@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.zerotwo.focus.erp.StudentProfileStore
 import com.zerotwo.focus.ui.blockedapps.BlockedAppsScreen
+import com.zerotwo.focus.ui.calendar.CalendarSettingsScreen
 import com.zerotwo.focus.ui.erp.ErpLoginScreen
 import com.zerotwo.focus.ui.home.HomeScreen
 import com.zerotwo.focus.ui.leaderboard.LeaderboardScreen
@@ -21,6 +22,7 @@ object Routes {
     const val BLOCKED_APPS = "blocked_apps"
     const val SCREEN_TIME = "screen_time"
     const val LEADERBOARD = "leaderboard"
+    const val CALENDAR = "calendar"
 }
 
 /** Replaces the whole back stack, so Back can't return to onboarding or sign-in. */
@@ -49,6 +51,7 @@ fun AppNavHost(startDestination: String) {
                 onOpenBlockedApps = { navController.navigate(Routes.BLOCKED_APPS) },
                 onOpenScreenTime = { navController.navigate(Routes.SCREEN_TIME) },
                 onOpenLeaderboard = { navController.navigate(Routes.LEADERBOARD) },
+                onOpenCalendar = { navController.navigate(Routes.CALENDAR) },
                 onReviewPermissions = { navController.navigate(Routes.ONBOARDING) },
                 onSignedOut = { navController.navigateClearingStack(Routes.ERP_LOGIN) },
             )
@@ -61,6 +64,9 @@ fun AppNavHost(startDestination: String) {
         }
         composable(Routes.LEADERBOARD) {
             LeaderboardScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.CALENDAR) {
+            CalendarSettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -134,6 +134,9 @@ class BlockedActivity : ComponentActivity() {
 
         fun launch(context: Context, appLabel: String, status: BlockStatus) {
             val (title, message) = when (status) {
+                is BlockStatus.InEvent ->
+                    "You're in ${status.event.title}" to
+                        "$appLabel is blocked until ${status.end.format(context)}, when it ends."
                 is BlockStatus.InClass ->
                     "You're in ${status.session.course}" to
                         "$appLabel is blocked until ${status.session.end.format(context)}, when class ends."

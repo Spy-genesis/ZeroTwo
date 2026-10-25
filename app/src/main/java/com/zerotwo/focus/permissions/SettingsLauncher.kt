@@ -37,6 +37,8 @@ object SettingsLauncher {
             AppPermission.ACCESSIBILITY -> listOf(
                 Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             )
+            // A runtime permission: once it's "don't ask again", only the app's own settings page can grant it.
+            AppPermission.CALENDAR -> listOf(appDetailsIntent(context))
             AppPermission.BATTERY_OPTIMIZATION -> listOf(
                 Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, pkg),
                 Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),

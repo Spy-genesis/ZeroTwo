@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zerotwo.focus.blocker.BlockStatus
+import com.zerotwo.focus.blocker.isInSession
 import com.zerotwo.focus.config.DemoConfig
 import com.zerotwo.focus.screentime.formatDuration
 import com.zerotwo.focus.timetable.ClassSession
@@ -69,6 +70,7 @@ fun HomeScreen(
     onOpenBlockedApps: () -> Unit,
     onOpenScreenTime: () -> Unit,
     onOpenLeaderboard: () -> Unit,
+    onOpenCalendar: () -> Unit,
     onReviewPermissions: () -> Unit,
     onSignedOut: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
@@ -112,7 +114,7 @@ fun HomeScreen(
     }
 
     val isDemo = (state.status as? BlockStatus.InClass)?.isDemo == true
-    val inClass = state.status is BlockStatus.InClass
+    val inClass = state.status.isInSession
 
     Scaffold { padding ->
         LazyColumn(
@@ -206,20 +208,29 @@ fun HomeScreen(
             }
 
             item {
-                HudSectionLabel("Today's schedule", Modifier.padding(top = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
+                    HudSectionLabel("Today's schedule", Modifier.weight(1f))
+                    Text(
+                        if (state.scheduleSource == ScheduleSource.CALENDAR) "FROM CALENDAR" else "BUILT-IN TIMETABLE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = MonoFamily,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            if (state.todaysClasses.isEmpty()) {
+            state.calendarHint?.let { hint ->
+                item { ConnectCalendarCard(hint, onOpenCalendar) }
+            }
+            if (state.schedule.isEmpty()) {
                 item {
                     Text(
-                        "No classes today.",
+                        if (state.scheduleSource == ScheduleSource.CALENDAR) "No matching events today." else "No classes today.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
-                items(state.todaysClasses, key = { "${it.start}-${it.course}" }) { session ->
-                    ScheduleRow(session, state.now)
-                }
+                items(state.schedule, key = { it.key }) { ScheduleRow(it) }
             }
 
             item {
@@ -229,6 +240,9 @@ fun HomeScreen(
                     }
                     OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenBlockedApps, modifier = Modifier.fillMaxWidth()) {
                         Text("Choose blocked apps")
+                    }
+                    OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onOpenCalendar, modifier = Modifier.fillMaxWidth()) {
+                        Text("Calendar settings")
                     }
                     OutlinedButton(shape = HudButtonShape, colors = hudOutlinedButtonColors(), onClick = onReviewPermissions, modifier = Modifier.fillMaxWidth()) {
                         Text("Review permissions")
@@ -261,11 +275,13 @@ private fun StatusCard(status: BlockStatus, appCount: Int) {
     val context = LocalContext.current
     val apps = "$appCount app${if (appCount == 1) "" else "s"}"
     val (headline, detail) = when (status) {
+        is BlockStatus.InEvent ->
+            "Blocking · in ${status.event.title}" to "$apps blocked until ${status.end.format(context)}"
         is BlockStatus.InClass ->
             "Blocking · in ${status.session.course}" to "$apps blocked until ${status.session.end.format(context)}"
         BlockStatus.Manual -> "Blocking · manual" to "$apps blocked until you switch it off"
         is BlockStatus.Off -> "Not blocking" to (
-            status.nextClassToday?.let { "Next: ${it.course} at ${it.start.format(context)}" }
+            status.next?.let { "Next: ${it.title} at ${it.start.format(context)}" }
                 ?: "No more classes today"
             )
     }
@@ -293,29 +309,46 @@ private fun StatusCard(status: BlockStatus, appCount: Int) {
 }
 
 @Composable
-private fun ScheduleRow(session: ClassSession, now: LocalTime) {
+private fun ScheduleRow(item: ScheduleItem) {
     val context = LocalContext.current
-    val isNow = session.isInSession(now)
-    val isPast = session.isOver(now)
     HudCard(
-        modifier = Modifier.fillMaxWidth().alpha(if (isPast) 0.45f else 1f),
-        tone = if (isNow) HudTone.Active else HudTone.Neutral,
+        modifier = Modifier.fillMaxWidth().alpha(if (item.isPast) 0.45f else 1f),
+        tone = if (item.isNow) HudTone.Active else HudTone.Neutral,
     ) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "${session.start.format(context)} – ${session.end.format(context)}",
+                if (item.allDay) "ALL DAY" else "${item.start.format(context)} – ${item.end.format(context)}",
                 style = HudNumber.copy(fontSize = 12.sp, fontWeight = FontWeight.Normal),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(150.dp),
             )
-            Text(session.course, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            if (isNow) {
+            Text(item.title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            if (item.isNow) {
                 Text(
                     "NOW",
                     style = HudNumber.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.secondary,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ConnectCalendarCard(hint: CalendarHint, onOpenCalendar: () -> Unit) {
+    HudCard(Modifier.fillMaxWidth(), tone = HudTone.Pink, onClick = onOpenCalendar) {
+        Column(Modifier.padding(16.dp)) {
+            Text("CONNECT YOUR CALENDAR", style = MaterialTheme.typography.titleMedium)
+            Text(
+                when (hint) {
+                    CalendarHint.NO_PERMISSION ->
+                        "Block during your real lectures instead of the built-in timetable. Tap to allow calendar access."
+                    CalendarHint.NONE_SELECTED -> "Calendar access is on. Tap to pick which calendars count as class time."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
         }
     }
 }

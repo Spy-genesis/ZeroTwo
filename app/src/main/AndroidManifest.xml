@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Optional: block during events in calendars the user picks. Read-only. -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
     <!-- Android 11+ package visibility: lets screen time show other apps' names and icons,
          and find the launcher (excluded from totals). -->

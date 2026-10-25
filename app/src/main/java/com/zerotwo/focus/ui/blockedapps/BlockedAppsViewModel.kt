@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zerotwo.focus.blocker.BlockPolicy
-import com.zerotwo.focus.blocker.BlockStatus
+import com.zerotwo.focus.blocker.isInSession
 import com.zerotwo.focus.blocker.BlockerSettings
 import com.zerotwo.focus.blocker.BlockerState
 import com.zerotwo.focus.config.BlockableApp
@@ -21,8 +21,8 @@ class BlockedAppsViewModel(application: Application) : AndroidViewModel(applicat
 
     /** During class the list is locked, so students can't un-block an app mid-lecture. */
     val locked: StateFlow<Boolean> = BlockPolicy.statusFlow(application)
-        .map { it is BlockStatus.InClass }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BlockPolicy.evaluate(application) is BlockStatus.InClass)
+        .map { it.isInSession }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BlockPolicy.evaluate(application).isInSession)
 
     fun setAppSelected(app: BlockableApp, selected: Boolean) {
         if (locked.value && !selected) return

@@ -18,6 +18,8 @@ object PermissionChecker {
             AppPermission.USAGE_ACCESS -> hasUsageAccess(context)
             AppPermission.OVERLAY -> Settings.canDrawOverlays(context)
             AppPermission.ACCESSIBILITY -> isAccessibilityServiceEnabled(context)
+            AppPermission.CALENDAR ->
+                context.checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED
             AppPermission.BATTERY_OPTIMIZATION -> isIgnoringBatteryOptimizations(context)
         }
     }.getOrDefault(false)
