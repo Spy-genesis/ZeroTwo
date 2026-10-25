@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ZeroTwo</string>
+    <string name="accessibility_service_label">ZeroTwo app blocker</string>
+    <string name="accessibility_service_description">Lets ZeroTwo see which app is in the foreground so it can block social apps during class hours. ZeroTwo does not read or store anything you type or see on screen.</string>
+</resources>

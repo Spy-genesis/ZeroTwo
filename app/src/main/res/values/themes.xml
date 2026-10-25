@@ -1,0 +1,4 @@
+<resources>
+    <!-- Window-level theme only; all UI colors come from the Compose theme. -->
+    <style name="Theme.ZeroTwo" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
