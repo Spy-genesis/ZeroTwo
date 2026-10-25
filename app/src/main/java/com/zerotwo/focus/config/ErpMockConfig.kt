@@ -7,16 +7,17 @@ package com.zerotwo.focus.config
 object ErpMockConfig {
 
     val DEPARTMENTS: List<String> = listOf(
-        "Computer Science (CSE)",
-        "Information Technology (IT)",
-        "Electronics & Communication (ECE)",
-        "Electrical (EEE)",
-        "Mechanical (ME)",
-        "Civil (CE)",
+        "Computer Science",
+        "Mathematics",
+        "Social Sciences",
+        "Economics (Scam)",
+        "BBA",
+        "ACF",
     )
 
     val BATCHES: List<String> = listOf("2022", "2023", "2024", "2025")
 
-    /** Accepted student ID shape: 4-16 letters/digits, e.g. 21CS1045. */
-    val STUDENT_ID_PATTERN = Regex("^[A-Z0-9]{4,16}$")
+    /** ERP IDs are exactly 5 digits, e.g. 24117. */
+    const val ERP_ID_LENGTH = 5
+    val STUDENT_ID_PATTERN = Regex("^[0-9]{$ERP_ID_LENGTH}$")
 }

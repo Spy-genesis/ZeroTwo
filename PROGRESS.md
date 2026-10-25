@@ -46,12 +46,12 @@
 - **Manifest:** `<queries>` for launcher/home intents so other apps' names and icons are visible on Android 11+.
 
 ### Phase 5 — Mock ERP login + leaderboard
-- **ERP login (MOCKED, integration-ready):** `erp/MockErpClient.kt` accepts any student ID matching `[A-Z0-9]{4,16}` (uppercased) plus a department + batch picked from `config/ErpMockConfig.kt`. Comments mark where a real ERP call goes. Profile saved locally in `erp/StudentProfile.kt` (`StudentProfileStore`).
+- **ERP login (MOCKED, integration-ready):** `erp/MockErpClient.kt` accepts any **5-digit ERP** (`[0-9]{5}`) plus a department + batch picked from `config/ErpMockConfig.kt` (departments: Computer Science, Mathematics, Social Sciences, Economics (Scam), BBA, ACF). The ERP field only accepts digits, max 5, with a number keypad. Profiles saved under older rules are treated as signed out. Comments mark where a real ERP call goes. Profile saved locally in `erp/StudentProfile.kt` (`StudentProfileStore`).
 - **Flow:** onboarding → ERP sign-in → Home. App launch skips sign-in when a profile exists. Home footer shows "Signed in as …" + **Sign out** (back to sign-in; screen-time data in Firestore stays).
 - **Firebase:** `cloud/FirebaseGateway.kt` — anonymous auth underneath (just to satisfy rules); Firestore collection `dailyScreenTime`, doc ID `{studentId}_{yyyy-MM-dd}`, fields `studentId, department, batch, date, totalMillis, socialMillis, uid, updatedAt`. One flat collection + equality-only filters → **no composite index needed**; sorting is done on the phone.
 - **Upload:** `cloud/ScreenTimeSync.kt` uploads today + yesterday. Triggered on sign-in, on Home, every 15 min from `BlockerService`, and forced when the leaderboard opens/refreshes. Never throws; 15 s timeout; Firestore's offline cache queues writes.
-- **Leaderboard:** Home → **Leaderboard**. Same department + batch, Today / Yesterday, ranked by **total** screen time, lowest first (ties by ID). Shows "You're #N of M", your row highlighted with full ID, classmates' IDs masked (`21•••45`), social time under each. Refresh button. Clear messages for: Firebase not configured, no connection, rules rejecting, anonymous auth disabled.
-- **Rules:** `firestore.rules` in repo root (signed-in read; writes must match doc ID, own uid, sane millis).
+- **Leaderboard:** Home → **Leaderboard**. Same department + batch, Today / Yesterday, ranked by **total** screen time, lowest first (ties by ID). Shows "You're #N of M", your row highlighted with full ID, classmates' ERPs masked to the last 2 digits (`•••17`), social time under each. Refresh button. Clear messages for: Firebase not configured, no connection, rules rejecting, anonymous auth disabled.
+- **Rules:** `firestore.rules` in repo root (signed-in read; writes must have a 5-digit ERP, a known department, matching doc ID, own uid, sane millis). **Re-publish after changing them.**
 - **Build:** the Google Services plugin is only applied if `app/google-services.json` exists (gitignored). Verified both ways.
 
 ### Firebase setup (one time)

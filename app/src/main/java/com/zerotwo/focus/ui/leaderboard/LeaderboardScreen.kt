@@ -200,5 +200,5 @@ private fun Message(title: String, body: String, action: @Composable () -> Unit 
     }
 }
 
-/** Classmates see "21•••45", not the full ID. */
-private fun maskId(id: String): String = if (id.length <= 4) id else id.take(2) + "•••" + id.takeLast(2)
+/** Classmates see "•••17", not the full ERP. */
+private fun maskId(id: String): String = "•••" + id.takeLast(2)

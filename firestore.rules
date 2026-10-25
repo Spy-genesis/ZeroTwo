@@ -9,9 +9,11 @@ service cloud.firestore {
       allow read: if request.auth != null;
 
       allow create, update: if request.auth != null
+        && request.resource.data.studentId.matches('^[0-9]{5}$')
         && docId == request.resource.data.studentId + '_' + request.resource.data.date
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.department is string
+        && request.resource.data.department in
+             ['Computer Science', 'Mathematics', 'Social Sciences', 'Economics (Scam)', 'BBA', 'ACF']
         && request.resource.data.batch is string
         && request.resource.data.totalMillis is int
         && request.resource.data.totalMillis >= 0

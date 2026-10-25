@@ -14,10 +14,10 @@ object MockErpClient {
 
     suspend fun signIn(rawStudentId: String, department: String?, batch: String?): Result<StudentProfile> {
         delay(600) // feels like a network round trip in the demo
-        val studentId = rawStudentId.trim().uppercase()
+        val studentId = rawStudentId.trim()
         return when {
             !ErpMockConfig.STUDENT_ID_PATTERN.matches(studentId) ->
-                Result.failure(IllegalArgumentException("Student ID must be 4–16 letters or digits."))
+                Result.failure(IllegalArgumentException("ERP must be exactly ${ErpMockConfig.ERP_ID_LENGTH} digits."))
             department == null || department !in ErpMockConfig.DEPARTMENTS ->
                 Result.failure(IllegalArgumentException("Pick your department."))
             batch == null || batch !in ErpMockConfig.BATCHES ->

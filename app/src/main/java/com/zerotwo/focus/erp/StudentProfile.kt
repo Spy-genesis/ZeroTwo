@@ -1,6 +1,7 @@
 package com.zerotwo.focus.erp
 
 import android.content.Context
+import com.zerotwo.focus.config.ErpMockConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +38,12 @@ class StudentProfileStore private constructor(context: Context) {
         val id = prefs.getString(KEY_ID, null) ?: return null
         val department = prefs.getString(KEY_DEPARTMENT, null) ?: return null
         val batch = prefs.getString(KEY_BATCH, null) ?: return null
+        // A profile saved under older ERP rules (other ID format or department list) means signing in again.
+        if (!ErpMockConfig.STUDENT_ID_PATTERN.matches(id) || department !in ErpMockConfig.DEPARTMENTS ||
+            batch !in ErpMockConfig.BATCHES
+        ) {
+            return null
+        }
         return StudentProfile(id, department, batch)
     }
 

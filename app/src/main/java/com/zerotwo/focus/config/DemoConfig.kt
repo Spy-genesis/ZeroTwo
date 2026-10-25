@@ -20,11 +20,11 @@ object DemoConfig {
      * "Today" scales them by how much of the day has passed so they look plausible at any hour.
      */
     val DEMO_CLASSMATES: List<DemoClassmate> = listOf(
-        DemoClassmate("21CS1002", fullDayMinutes = 52, socialShare = 0.20),
-        DemoClassmate("21CS1017", fullDayMinutes = 95, socialShare = 0.35),
-        DemoClassmate("21CS1023", fullDayMinutes = 148, socialShare = 0.50),
-        DemoClassmate("21CS1031", fullDayMinutes = 203, socialShare = 0.60),
-        DemoClassmate("21CS1038", fullDayMinutes = 262, socialShare = 0.70),
-        DemoClassmate("21CS1044", fullDayMinutes = 341, socialShare = 0.75),
+        DemoClassmate("24102", fullDayMinutes = 52, socialShare = 0.20),
+        DemoClassmate("24117", fullDayMinutes = 95, socialShare = 0.35),
+        DemoClassmate("24123", fullDayMinutes = 148, socialShare = 0.50),
+        DemoClassmate("24131", fullDayMinutes = 203, socialShare = 0.60),
+        DemoClassmate("24138", fullDayMinutes = 262, socialShare = 0.70),
+        DemoClassmate("24144", fullDayMinutes = 341, socialShare = 0.75),
     )
 }

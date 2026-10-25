@@ -30,7 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,19 +58,23 @@ fun ErpLoginScreen(
         ) {
             Text("Sign in with College ERP", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
             Text(
-                "Links your screen time to your department's leaderboard. Demo build: any well-formed student ID works.",
+                "Links your screen time to your department's leaderboard. Demo build: any 5-digit ERP works.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             OutlinedTextField(
                 value = state.studentId,
-                onValueChange = viewModel::setStudentId,
-                label = { Text("Student ID") },
-                placeholder = { Text("e.g. 21CS1045") },
+                // Digits only, capped at 5, so the field can't hold an invalid ERP.
+                onValueChange = { input ->
+                    viewModel.setStudentId(input.filter(Char::isDigit).take(ErpMockConfig.ERP_ID_LENGTH))
+                },
+                label = { Text("ERP") },
+                placeholder = { Text("e.g. 24117") },
+                supportingText = { Text("${state.studentId.length}/${ErpMockConfig.ERP_ID_LENGTH} digits") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Characters,
+                    keyboardType = KeyboardType.NumberPassword,
                     imeAction = ImeAction.Next,
                 ),
                 modifier = Modifier.fillMaxWidth(),
